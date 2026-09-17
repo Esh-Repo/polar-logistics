@@ -1,0 +1,4 @@
+Ensure it is in light mode, no logos, a very neat clean layout, no glowing buttons or icons.
+No gradients, and only absolute bare minimum text is needed
+No emojis as well
+The solution name is dolphin 

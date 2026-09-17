@@ -1,0 +1,1543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>dolphin - Expedition Planner</title>
+
+  <!-- Leaflet CSS & JS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    body {
+      background-color: #ffffff;
+      color: #262626;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      font-size: 14px;
+    }
+
+    .header {
+      background: #fafafa;
+      border-bottom: 1px solid #e0e0e0;
+      padding: 0 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      height: 52px;
+      flex-shrink: 0;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .back-btn {
+      text-decoration: none;
+      color: #262626;
+      font-weight: 600;
+      font-size: 13px;
+      padding: 6px 12px;
+      border: 1px solid #d9d9d9;
+      border-radius: 6px;
+      background: #ffffff;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.15s ease;
+    }
+
+    .back-btn:hover {
+      background: #f0f0f0;
+      border-color: #bfbfbf;
+    }
+
+    .brand {
+      font-size: 18px;
+      font-weight: 700;
+      color: #262626;
+      letter-spacing: -0.3px;
+    }
+
+    .top-controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .top-controls label {
+      font-size: 13px;
+      color: #595959;
+      font-weight: 600;
+    }
+
+    select, input, button {
+      border: 1px solid #d9d9d9;
+      border-radius: 6px;
+      padding: 6px 12px;
+      font-size: 13px;
+      background: #ffffff;
+      color: #262626;
+      outline: none;
+    }
+
+    select:focus, input:focus {
+      border-color: #262626;
+    }
+
+    button {
+      background: #ffffff;
+      color: #262626;
+      cursor: pointer;
+      font-weight: 600;
+      transition: background 0.15s ease;
+    }
+
+    button:hover {
+      background: #f5f5f5;
+    }
+
+    button.active {
+      background: #262626;
+      color: #ffffff;
+      border-color: #262626;
+    }
+
+    .btn-small {
+      padding: 4px 10px;
+      font-size: 12px;
+      border-radius: 4px;
+    }
+
+    .btn-primary {
+      background: #262626;
+      color: #ffffff;
+      border-color: #262626;
+    }
+
+    .btn-primary:hover {
+      background: #404040;
+    }
+
+    .app-container {
+      display: flex;
+      height: calc(100vh - 52px);
+      width: 100vw;
+      overflow: hidden;
+    }
+
+    .left-panel {
+      width: 500px;
+      min-width: 450px;
+      max-width: 580px;
+      border-right: 1px solid #e0e0e0;
+      background: #ffffff;
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+
+    .feature-tabs {
+      display: flex;
+      background: #fafafa;
+      border-bottom: 1px solid #e0e0e0;
+      height: 44px;
+      flex-shrink: 0;
+    }
+
+    .tab-btn {
+      flex: 1;
+      border: none;
+      border-bottom: 3px solid transparent;
+      border-radius: 0;
+      background: transparent;
+      font-size: 13px;
+      font-weight: 600;
+      color: #595959;
+      padding: 0 10px;
+      cursor: pointer;
+      text-align: center;
+    }
+
+    .tab-btn:hover {
+      background: #f0f0f0;
+      color: #262626;
+    }
+
+    .tab-btn.active {
+      background: #ffffff;
+      color: #262626;
+      font-weight: 700;
+      border-bottom-color: #262626;
+    }
+
+    .panel-body {
+      flex: 1;
+      padding: 16px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .tab-pane {
+      display: none;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .tab-pane.active {
+      display: flex;
+    }
+
+    .section-title {
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: #595959;
+      letter-spacing: 0.5px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #595959;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+    }
+
+    .metric-card {
+      background: #f7f8fa;
+      border: 1px solid #eaebed;
+      padding: 10px 12px;
+      border-radius: 6px;
+    }
+
+    .metric-val {
+      font-size: 16px;
+      font-weight: 700;
+      color: #262626;
+    }
+
+    .metric-lbl {
+      font-size: 11px;
+      color: #8c8c8c;
+      margin-top: 2px;
+    }
+
+    .chart-container {
+      height: 140px;
+      width: 100%;
+    }
+
+    .right-panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      background: #ffffff;
+      position: relative;
+    }
+
+    .map-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 16px;
+      background: #fafafa;
+      border-bottom: 1px solid #e0e0e0;
+      flex-shrink: 0;
+      gap: 8px;
+    }
+
+    .map-toolbar-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    #map {
+      flex: 1;
+      width: 100%;
+      height: 100%;
+      background: #f7f8fa;
+    }
+
+    .table-container {
+      max-height: 280px;
+      overflow-y: auto;
+      border: 1px solid #e0e0e0;
+      border-radius: 6px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    th, td {
+      padding: 9px 12px;
+      text-align: left;
+      border-bottom: 1px solid #f0f0f0;
+      vertical-align: middle;
+    }
+
+    th {
+      background: #fafafa;
+      color: #595959;
+      font-weight: 700;
+      position: sticky;
+      top: 0;
+      border-bottom: 1px solid #e0e0e0;
+      z-index: 2;
+    }
+
+    .dropzone {
+      border: 2px dashed #d9d9d9;
+      border-radius: 6px;
+      padding: 16px;
+      text-align: center;
+      cursor: pointer;
+      background: #fafafa;
+      transition: border-color 0.15s ease;
+    }
+
+    .dropzone:hover {
+      border-color: #262626;
+      background: #f5f5f5;
+    }
+
+    .dropzone-lbl {
+      font-size: 12px;
+      color: #595959;
+      font-weight: 500;
+    }
+
+    .progress-bg {
+      height: 8px;
+      background: #f0f0f0;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: #262626;
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .badge-success { background: #e6f4ea; color: #137333; border: 1px solid #ceedd3; }
+    .badge-danger { background: #fce8e6; color: #c5221f; border: 1px solid #fad2cf; }
+
+    .quick-gear-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .gear-thumb {
+      width: 48px;
+      height: 48px;
+      object-fit: cover;
+      border-radius: 6px;
+      border: 1px solid #d9d9d9;
+      background: #f0f0f0;
+      display: block;
+    }
+
+    .animated-route-path {
+      stroke-dasharray: 12, 12;
+      animation: dashAnimation 1.2s linear infinite;
+    }
+
+    @keyframes dashAnimation {
+      from { stroke-dashoffset: 24; }
+      to { stroke-dashoffset: 0; }
+    }
+
+    .custom-marker-icon {
+      background: #ffffff;
+      border: 2px solid #262626;
+      border-radius: 8px;
+      padding: 3px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      object-fit: contain;
+    }
+
+    .sim-marker-icon {
+      background: #262626;
+      border: 2px solid #ffffff;
+      border-radius: 50%;
+      padding: 4px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+      object-fit: contain;
+    }
+
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <div class="header-left">
+      <a href="index.html" class="back-btn">← Back</a>
+      <div class="brand">dolphin</div>
+    </div>
+    <div class="top-controls">
+      <label for="route-preset-select">Preset Route:</label>
+      <select id="route-preset-select">
+        <option value="transit">India Intercontinental Transit (Goa - Cape Town - Antarctica)</option>
+        <option value="maitri_local">Maitri Station Operations</option>
+        <option value="bharati_local">Bharati Station Operations</option>
+        <option value="traverse">Maitri to Bharati Overland Traverse</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="app-container">
+
+    <div class="left-panel">
+      <div class="feature-tabs">
+        <button class="tab-btn active" data-tab="tab-physics">Trip & Weather</button>
+        <button class="tab-btn" data-tab="tab-payload">Gear & Packing</button>
+        <button class="tab-btn" data-tab="tab-manifest">Route & Elevation</button>
+      </div>
+
+      <div class="panel-body">
+
+        <!-- TAB 1: TRIP & WEATHER -->
+        <div id="tab-physics" class="tab-pane active">
+          <div class="section-title">Trip Timeline & Speed</div>
+
+          <div class="grid-2">
+            <div class="form-group">
+              <label>Start Date</label>
+              <input type="date" id="start-date" value="2026-11-01">
+            </div>
+            <div class="form-group">
+              <label>Start Time</label>
+              <input type="time" id="start-time" value="08:00">
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <div class="form-group">
+              <label>Applicable Travel Mode</label>
+              <select id="haul-mode"></select>
+            </div>
+            <div class="form-group">
+              <label>Team Size</label>
+              <input type="number" id="team-size" value="6" min="1" max="50">
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <div class="metric-card">
+              <div class="metric-val" id="duration-val">0 Days</div>
+              <div class="metric-lbl">Total Estimated Time</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-val" id="daylight-val">24.0 hrs</div>
+              <div class="metric-lbl">Daylight Hours</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-val" id="windchill-val">-28.4 °C</div>
+              <div class="metric-lbl">Wind Chill</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-val" id="blizzard-val">18%</div>
+              <div class="metric-lbl">Blizzard Risk</div>
+            </div>
+          </div>
+
+          <div class="section-title">Food & Fuel Estimates</div>
+
+          <div class="grid-3">
+            <div class="metric-card">
+              <div class="metric-val" id="caloric-val">4,800</div>
+              <div class="metric-lbl">kcal/person/day</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-val" id="rations-val">158 kg</div>
+              <div class="metric-lbl">Food Supply</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-val" id="fuel-val">43 L</div>
+              <div class="metric-lbl">Fuel Required</div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Temperature & Wind Chill Trend (°C)</label>
+            <div class="chart-container">
+              <canvas id="weatherChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 2: GEAR & PACKING -->
+        <div id="tab-payload" class="tab-pane">
+          <div class="section-title">Automatic Gear Scanner (Photo Upload)</div>
+
+          <div class="dropzone" id="dropzone">
+            <input type="file" id="gear-file-input" class="hidden" accept="image/*">
+            <div class="dropzone-lbl" id="dropzone-text">📷 Drop gear photo here or click to scan item</div>
+          </div>
+
+          <div class="section-title">Quick Add Essential Items</div>
+          <div class="quick-gear-container">
+            <button class="btn-small" onclick="quickAddGear('parka')">+ Down Parka</button>
+            <button class="btn-small" onclick="quickAddGear('stove')">+ Fuel Stove</button>
+            <button class="btn-small" onclick="quickAddGear('tent')">+ Polar Tent</button>
+            <button class="btn-small" onclick="quickAddGear('sled')">+ Cargo Sled</button>
+            <button class="btn-small" onclick="quickAddGear('sat')">+ Sat Phone</button>
+          </div>
+
+          <div class="section-title">Manual Gear Input</div>
+          <div class="grid-3">
+            <input type="text" id="manual-gear-name" placeholder="Item Name" style="grid-column: span 2;">
+            <input type="number" id="manual-gear-mass" placeholder="Mass (kg)" step="0.5">
+          </div>
+          <button id="btn-add-manual-item" style="width: 100%;">Add Item to Cargo</button>
+
+          <div class="form-group">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <label>Payload Capacity Used</label>
+              <span id="payload-text" style="font-size:12px; font-weight:700;">0 / 450 kg</span>
+            </div>
+            <div class="progress-bg">
+              <div id="payload-bar" class="progress-fill"></div>
+            </div>
+          </div>
+
+          <div class="grid-3">
+            <div class="metric-card">
+              <div class="metric-val" id="volume-val">0 L</div>
+              <div class="metric-lbl">Total Volume</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-val" id="balance-lr">50 / 50</div>
+              <div class="metric-lbl">Weight Balance (L/R)</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-val" id="friction-force">0 N</div>
+              <div class="metric-lbl">Sled Drag</div>
+            </div>
+          </div>
+
+          <!-- ENLARGED SAFETY CHECKLIST -->
+          <div class="section-title">Safety Checklist</div>
+          <div class="table-container" style="max-height:180px;">
+            <table>
+              <thead>
+                <tr><th>Category</th><th>Status</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Warm Parka & Outerwear</td><td><span class="badge badge-danger" id="chk-parka">Missing</span></td></tr>
+                <tr><td>Multi-fuel Stove</td><td><span class="badge badge-danger" id="chk-stove">Missing</span></td></tr>
+                <tr><td>Polar Shelter / Tent</td><td><span class="badge badge-danger" id="chk-tent">Missing</span></td></tr>
+                <tr><td>Cargo Sled / Container</td><td><span class="badge badge-danger" id="chk-sled">Missing</span></td></tr>
+                <tr><td>Satellite Phone / Radio</td><td><span class="badge badge-danger" id="chk-sat">Missing</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- ENLARGED PACKED GEAR INVENTORY -->
+          <div class="section-title">Packed Gear Inventory (With Image Preview)</div>
+          <div class="table-container" style="max-height:350px;">
+            <table>
+              <thead>
+                <tr>
+                  <th style="width: 65px;">Photo</th>
+                  <th>Item Name</th>
+                  <th style="width: 80px;">Weight</th>
+                  <th style="width: 70px;">Action</th>
+                </tr>
+              </thead>
+              <tbody id="inventory-body"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- TAB 3: ROUTE & ELEVATION -->
+        <div id="tab-manifest" class="tab-pane">
+          <div class="section-title">Route Summary</div>
+
+          <div class="grid-3">
+            <div class="metric-card">
+              <div class="metric-val" id="route-distance">0.0 km</div>
+              <div class="metric-lbl">Distance</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-val" id="est-travel-time">0.0 hrs</div>
+              <div class="metric-lbl">Est Travel Time</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-val" id="max-slope">0.0 %</div>
+              <div class="metric-lbl">Max Slope</div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Elevation Profile (Meters Above Sea Level)</label>
+            <div class="chart-container">
+              <canvas id="elevationChart"></canvas>
+            </div>
+          </div>
+
+          <!-- ENLARGED WAYPOINT LIST & ETA -->
+          <div class="section-title">Waypoint List & Estimated Arrival Time (ETA)</div>
+          <div class="table-container" style="max-height:360px;">
+            <table>
+              <thead>
+                <tr>
+                  <th>Type</th>
+                  <th>Location / Waypoint</th>
+                  <th>Leg Dist</th>
+                  <th>Estimated Arrival (ETA)</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="waypoint-manifest-body"></tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- RIGHT PANEL: MAP -->
+    <div class="right-panel">
+      <div class="map-toolbar">
+        <div class="map-toolbar-group">
+          <span style="font-size:12px; font-weight:600; color:#595959;">Tool Mode:</span>
+          <button id="btn-mode-select" class="active">🖐️ Select / Pan</button>
+          <span style="border-left:1px solid #d9d9d9; height:18px; margin:0 2px;"></span>
+          <span style="font-size:12px; font-weight:600; color:#595959;">Add Marker:</span>
+          <button id="btn-mode-station">Station</button>
+          <button id="btn-mode-camp">Camp</button>
+          <button id="btn-mode-tent">Supply Tent</button>
+          <button id="btn-mode-airplane">Airplane</button>
+          <button id="btn-mode-ship">Ship (Sea Only)</button>
+          <button id="btn-mode-hazard">Hazard</button>
+          <button id="btn-mode-field">Site</button>
+        </div>
+        <div class="map-toolbar-group">
+          <button id="btn-sim-route" class="btn-primary">▶ Visualize Route</button>
+          <select id="map-layer-select">
+            <option value="street">Standard</option>
+            <option value="topo">Topographic</option>
+            <option value="sat">Satellite</option>
+            <option value="light">Clean Light</option>
+          </select>
+          <button id="btn-clear-route">Reset Points</button>
+        </div>
+      </div>
+
+      <div id="map"></div>
+    </div>
+
+  </div>
+
+  <!-- Hugging Face Transformers.js Module Integration -->
+  <script type="module">
+    import { pipeline } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2';
+
+    const MAP_ICON_URLS = {
+      station: 'https://img.icons8.com/?size=100&id=12002&format=png&color=000000',
+      camp: 'https://img.icons8.com/?size=100&id=8e3ropbetVKf&format=png&color=000000',
+      tent: 'https://img.icons8.com/?size=100&id=97488&format=png&color=000000',
+      airplane: 'https://img.icons8.com/?size=100&id=8Ibozfq9Fq5Z&format=png&color=000000',
+      ship: 'https://img.icons8.com/?size=100&id=IEqhpkeOWOog&format=png&color=000000',
+      hazard: 'https://img.icons8.com/?size=100&id=63690&format=png&color=000000',
+      field: 'https://img.icons8.com/?size=100&id=13884&format=png&color=000000',
+      crew: 'https://img.icons8.com/?size=100&id=yHtsKRVMNfox&format=png&color=000000'
+    };
+
+    const DEFAULT_GEAR_IMAGES = {
+      parka: 'https://img.icons8.com/?size=100&id=13809&format=png&color=000000',
+      stove: 'https://img.icons8.com/?size=100&id=12316&format=png&color=000000',
+      tent: 'https://img.icons8.com/?size=100&id=97488&format=png&color=000000',
+      sled: 'https://img.icons8.com/?size=100&id=11428&format=png&color=000000',
+      sat: 'https://img.icons8.com/?size=100&id=20888&format=png&color=000000',
+      generic: 'https://img.icons8.com/?size=100&id=53372&format=png&color=000000'
+    };
+
+    // Preset configurations with clean separated land/sea points
+    const PRESETS = {
+      transit: {
+        center: [-20.0, 50.0],
+        zoom: 3,
+        waypoints: [
+          { lat: 15.391, lng: 73.878, name: "Goa (Mormugao Port / NCPOR HQ), India", type: "station", elev: 15 },
+          { lat: 0.000, lng: 65.000, name: "Equatorial Indian Ocean Passage", type: "ship", elev: 0 },
+          { lat: -33.924, lng: 18.424, name: "Cape Town Port / Air Hub, South Africa", type: "station", elev: 12 },
+          { lat: -55.000, lng: 30.000, name: "Southern Ocean Sea Waypoint", type: "ship", elev: 0 },
+          { lat: -69.408, lng: 76.190, name: "Bharati Station, Larsemann Hills", type: "station", elev: 35 },
+          { lat: -70.050, lng: 11.900, name: "Indian Bay Ice Shelf Harbor", type: "tent", elev: 20 },
+          { lat: -70.766, lng: 11.733, name: "Maitri Research Station", type: "station", elev: 117 },
+          { lat: -70.822, lng: 11.636, name: "ALCI Novo Blue Ice Runway", type: "airplane", elev: 520 }
+        ]
+      },
+      maitri_local: {
+        center: [-70.766, 11.733],
+        zoom: 9,
+        waypoints: [
+          { lat: -70.766, lng: 11.733, name: "Maitri Main Base", type: "station", elev: 117 },
+          { lat: -70.150, lng: 11.800, name: "Ice Shelf Supply Depot", type: "tent", elev: 45 },
+          { lat: -71.120, lng: 12.100, name: "South Glacier Field Camp", type: "camp", elev: 890 },
+          { lat: -71.383, lng: 12.333, name: "Wohlthat Mountain Science Site", type: "field", elev: 1420 }
+        ]
+      },
+      bharati_local: {
+        center: [-69.408, 76.190],
+        zoom: 9,
+        waypoints: [
+          { lat: -69.408, lng: 76.190, name: "Bharati Main Station", type: "station", elev: 35 },
+          { lat: -69.380, lng: 76.350, name: "Grovnes Peninsula Outpost", type: "tent", elev: 50 },
+          { lat: -69.550, lng: 76.000, name: "Fisher Island Crevasse Hazard", type: "hazard", elev: 12 }
+        ]
+      },
+      traverse: {
+        center: [-70.0, 45.0],
+        zoom: 4,
+        waypoints: [
+          { lat: -70.766, lng: 11.733, name: "Maitri Station", type: "station", elev: 117 },
+          { lat: -71.500, lng: 25.000, name: "High Plateau Depot Alpha", type: "camp", elev: 1850 },
+          { lat: -71.200, lng: 50.000, name: "Amery Ice Shelf Transit Camp", type: "tent", elev: 2100 },
+          { lat: -69.408, lng: 76.190, name: "Bharati Station", type: "station", elev: 35 }
+        ]
+      }
+    };
+
+    let map, routeGlowLine, routeAnimLine;
+    let waypoints = [];
+    let activeRouteWaypoints = [];
+    let gearItems = [];
+    let currentMode = 'select'; 
+    let classifier = null;
+    let tileLayers = {};
+    let activeTileLayer = null;
+
+    // Simulation Engine Variables
+    let isSimulating = false;
+    let simInterval = null;
+    let simMarker = null;
+
+    function createCustomIcon(type) {
+      const url = MAP_ICON_URLS[type] || MAP_ICON_URLS.camp;
+      return L.icon({
+        iconUrl: url,
+        iconSize: [38, 38],
+        iconAnchor: [19, 19],
+        popupAnchor: [0, -20],
+        className: 'custom-marker-icon'
+      });
+    }
+
+    function initMap() {
+      map = L.map('map', { zoomControl: true }).setView(PRESETS.transit.center, PRESETS.transit.zoom);
+
+      tileLayers = {
+        street: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18, attribution: 'OSM' }),
+        topo: L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', { maxZoom: 17, attribution: 'OpenTopoMap' }),
+        sat: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 18, attribution: 'Esri Satellite' }),
+        light: L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { maxZoom: 19, attribution: 'CartoDB' })
+      };
+
+      activeTileLayer = tileLayers.street.addTo(map);
+
+      routeGlowLine = L.polyline([], {
+        color: '#262626',
+        weight: 8,
+        opacity: 0.25,
+        lineCap: 'round'
+      }).addTo(map);
+
+      routeAnimLine = L.polyline([], {
+        color: '#ffffff',
+        weight: 3.5,
+        opacity: 0.9,
+        className: 'animated-route-path',
+        lineCap: 'round'
+      }).addTo(map);
+
+      map.on('click', onMapClick);
+      loadPreset('transit');
+    }
+
+    function updateApplicableModes(presetKey) {
+      const haulSelect = document.getElementById('haul-mode');
+      haulSelect.innerHTML = '';
+
+      let options = [];
+      if (presetKey === 'transit') {
+        options = [
+          { val: 'airplane', label: 'Intercontinental Flight / IL-76 (500 km/h)', speed: 500 },
+          { val: 'ship', label: 'Icebreaker Vessel / Expedition Ship (30 km/h)', speed: 30 }
+        ];
+      } else if (presetKey === 'traverse') {
+        options = [
+          { val: 'pistenbully', label: 'PistenBully Snowcat (12 km/h)', speed: 12 },
+          { val: 'snowmobile', label: 'Heavy Snowmobile (22 km/h)', speed: 22 },
+          { val: 'airplane', label: 'Basler BT-67 Polar Aircraft (250 km/h)', speed: 250 },
+          { val: 'manhaul', label: 'Foot / Sled Haul (2.5 km/h)', speed: 2.5 }
+        ];
+      } else {
+        options = [
+          { val: 'pistenbully', label: 'Snowcat Vehicle (12 km/h)', speed: 12 },
+          { val: 'snowmobile', label: 'Snowmobile (22 km/h)', speed: 22 },
+          { val: 'airplane', label: 'Twin Otter / Helicopter (180 km/h)', speed: 180 },
+          { val: 'manhaul', label: 'Foot Sledding (2.5 km/h)', speed: 2.5 }
+        ];
+      }
+
+      options.forEach(opt => {
+        const el = document.createElement('option');
+        el.value = opt.val;
+        el.textContent = opt.label;
+        haulSelect.appendChild(el);
+      });
+
+      calculatePhysicsAndMetabolics();
+    }
+
+    // Sea/Ocean placement detector
+    async function isSeaLocation(lat, lng) {
+      try {
+        const elevRes = await fetch(`https://api.open-meteo.com/v1/elevation?latitude=${lat}&longitude=${lng}`);
+        if (elevRes.ok) {
+          const elevData = await elevRes.json();
+          if (elevData && elevData.elevation && elevData.elevation[0] > 2) {
+            return false; // Land elevation
+          }
+        }
+        
+        const geoRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`);
+        if (geoRes.ok) {
+          const geoData = await geoRes.json();
+          if (geoData && geoData.address) {
+            const landKeys = ['road', 'city', 'suburb', 'town', 'village', 'county', 'state', 'country'];
+            const hasLand = landKeys.some(k => geoData.address[k]);
+            if (hasLand) return false;
+          }
+        }
+        return true; 
+      } catch (e) {
+        return lat < 10 && lat > -70;
+      }
+    }
+
+    async function getAddressFromCoords(lat, lng) {
+      try {
+        const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`);
+        if (response.ok) {
+          const data = await response.json();
+          if (data.display_name) {
+            const parts = data.display_name.split(',');
+            return parts.slice(0, 3).join(',');
+          }
+        }
+      } catch (e) {
+        console.warn("Location lookup fallback:", e);
+      }
+      return `${lat.toFixed(3)}°, ${lng.toFixed(3)}°`;
+    }
+
+    function loadPreset(presetKey) {
+      stopRouteSimulation();
+      const config = PRESETS[presetKey];
+      if (!config) return;
+
+      clearAllMarkers();
+      map.setView(config.center, config.zoom);
+
+      config.waypoints.forEach(wp => {
+        addWaypoint(wp.lat, wp.lng, wp.type, wp.name, wp.elev);
+      });
+
+      updateApplicableModes(presetKey);
+    }
+
+    function clearAllMarkers() {
+      stopRouteSimulation();
+      waypoints.forEach(w => { if (w.marker) map.removeLayer(w.marker); });
+      waypoints = [];
+      updateRoute();
+    }
+
+    function addWaypoint(lat, lng, type, name, elev) {
+      const marker = L.marker([lat, lng], { icon: createCustomIcon(type) }).addTo(map);
+      const waypointObj = { lat, lng, type, name, elev, marker, eta: '' };
+
+      marker.on('click', () => {
+        marker.bindPopup(`
+          <div style="font-size:12px; width:190px; line-height:1.4;">
+            <div style="font-weight:700; color:#262626;">${waypointObj.name}</div>
+            <div style="color:#595959; margin-top:2px;">Type: <b>${type.toUpperCase()}</b></div>
+            <div style="color:#595959;">Elev: ${elev}m</div>
+            <div style="color:#262626; margin-top:4px;">⏱ <b>ETA:</b> ${waypointObj.eta || 'N/A'}</div>
+          </div>
+        `).openPopup();
+      });
+
+      waypoints.push(waypointObj);
+      updateRoute();
+    }
+
+    window.removeWaypoint = function(idx) {
+      stopRouteSimulation();
+      if (waypoints[idx] && waypoints[idx].marker) {
+        map.removeLayer(waypoints[idx].marker);
+      }
+      waypoints.splice(idx, 1);
+      updateRoute();
+    };
+
+    async function onMapClick(e) {
+      if (currentMode === 'select') return;
+
+      stopRouteSimulation();
+      const lat = e.latlng.lat;
+      const lng = e.latlng.lng;
+
+      const isSea = await isSeaLocation(lat, lng);
+
+      // Terrain placement validation
+      if (currentMode === 'ship') {
+        if (!isSea) {
+          alert("🚢 Ship markers can ONLY be added in open sea/ocean water areas! The selected coordinate is on land.");
+          return;
+        }
+      } else {
+        // station, camp, tent, airplane, hazard, field MUST be placed on land
+        if (isSea) {
+          const modeLabel = currentMode.charAt(0).toUpperCase() + currentMode.slice(1);
+          alert(`📍 ${modeLabel} markers can ONLY be added on land/ice surfaces! The selected coordinate is in open sea/ocean water.`);
+          return;
+        }
+      }
+
+      const elev = Math.floor(Math.random() * 900) + 20;
+      let typeName = currentMode.toUpperCase();
+      let defaultName = `${typeName} Location (${lat.toFixed(2)}°, ${lng.toFixed(2)}°)`;
+
+      addWaypoint(lat, lng, currentMode, defaultName, elev);
+
+      const resolvedName = await getAddressFromCoords(lat, lng);
+      const lastWp = waypoints[waypoints.length - 1];
+      if (lastWp && lastWp.lat === lat && lastWp.lng === lng) {
+        lastWp.name = resolvedName;
+        updateRoute();
+      }
+    }
+
+    function calculateHaversine(lat1, lon1, lat2, lon2) {
+      const R = 6371;
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLon = (lon2 - lon1) * Math.PI / 180;
+      const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                Math.sin(dLon/2) * Math.sin(dLon/2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      return R * c;
+    }
+
+    function formatETA(startDateStr, startTimeStr, hoursToAdd) {
+      if (!startDateStr) return 'N/A';
+      const [year, month, day] = startDateStr.split('-').map(Number);
+      const [hours, minutes] = (startTimeStr || '08:00').split(':').map(Number);
+
+      const dateObj = new Date(year, month - 1, day, hours, minutes);
+      dateObj.setMinutes(dateObj.getMinutes() + Math.round(hoursToAdd * 60));
+
+      const options = { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false };
+      return dateObj.toLocaleDateString('en-US', options);
+    }
+
+    function updateRoute() {
+      const mode = document.getElementById('haul-mode').value || 'ship';
+
+      // Airplanes bypass sea transit points
+      if (mode === 'airplane') {
+        activeRouteWaypoints = waypoints.filter(w => w.type !== 'ship');
+      } else {
+        activeRouteWaypoints = [...waypoints];
+      }
+
+      const latLngs = activeRouteWaypoints.map(w => [w.lat, w.lng]);
+      routeGlowLine.setLatLngs(latLngs);
+      routeAnimLine.setLatLngs(latLngs);
+
+      let totalDist = 0;
+      let maxSlope = 0;
+      const manifestBody = document.getElementById('waypoint-manifest-body');
+      manifestBody.innerHTML = '';
+
+      let speed = 30;
+      if (mode === 'pistenbully') speed = 12;
+      if (mode === 'snowmobile') speed = 22;
+      if (mode === 'airplane') speed = 500;
+      if (mode === 'ship') speed = 30;
+      if (mode === 'manhaul') speed = 2.5;
+
+      const startDateVal = document.getElementById('start-date').value;
+      const startTimeVal = document.getElementById('start-time').value;
+
+      let cumulativeHours = 0;
+
+      for (let i = 0; i < activeRouteWaypoints.length; i++) {
+        let legDist = 0;
+        if (i > 0) {
+          legDist = calculateHaversine(
+            activeRouteWaypoints[i-1].lat, activeRouteWaypoints[i-1].lng,
+            activeRouteWaypoints[i].lat, activeRouteWaypoints[i].lng
+          );
+          totalDist += legDist;
+          cumulativeHours += (legDist / speed);
+
+          const elevDiff = Math.abs(activeRouteWaypoints[i].elev - activeRouteWaypoints[i-1].elev);
+          if (legDist > 0) {
+            const slope = (elevDiff / (legDist * 1000)) * 100;
+            if (slope > maxSlope) maxSlope = slope;
+          }
+        }
+
+        const etaFormatted = formatETA(startDateVal, startTimeVal, cumulativeHours);
+        activeRouteWaypoints[i].eta = etaFormatted;
+
+        const origIdx = waypoints.indexOf(activeRouteWaypoints[i]);
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><span class="badge" style="background:#f0f0f0; color:#262626;">${activeRouteWaypoints[i].type}</span></td>
+          <td><b>${activeRouteWaypoints[i].name}</b></td>
+          <td>${legDist.toFixed(1)} km</td>
+          <td><span class="badge badge-success">${etaFormatted}</span></td>
+          <td><button class="btn-small" onclick="removeWaypoint(${origIdx})">Remove</button></td>
+        `;
+        manifestBody.appendChild(tr);
+      }
+
+      const totalTravelTimeHours = totalDist / speed;
+
+      document.getElementById('route-distance').innerText = `${totalDist.toFixed(1)} km`;
+      document.getElementById('est-travel-time').innerText = `${totalTravelTimeHours.toFixed(1)} hrs`;
+      document.getElementById('max-slope').innerText = `${maxSlope.toFixed(1)} %`;
+
+      updateElevationChart();
+    }
+
+    function toggleRouteSimulation() {
+      if (isSimulating) {
+        stopRouteSimulation();
+      } else {
+        startRouteSimulation();
+      }
+    }
+
+    function startRouteSimulation() {
+      if (activeRouteWaypoints.length < 2) {
+        alert("Please ensure at least 2 valid waypoints exist for this transit mode!");
+        return;
+      }
+
+      isSimulating = true;
+      const btn = document.getElementById('btn-sim-route');
+      btn.innerText = "⏸ Pause Simulation";
+
+      let currentLeg = 0;
+      let stepProgress = 0;
+      const totalStepsPerLeg = 40;
+
+      const mode = document.getElementById('haul-mode').value;
+      let simIconUrl = MAP_ICON_URLS.crew;
+      if (mode === 'airplane') simIconUrl = MAP_ICON_URLS.airplane;
+      else if (mode === 'ship') simIconUrl = MAP_ICON_URLS.ship;
+
+      const simIcon = L.icon({
+        iconUrl: simIconUrl,
+        iconSize: [40, 40],
+        iconAnchor: [20, 20],
+        className: 'sim-marker-icon'
+      });
+
+      if (!simMarker) {
+        simMarker = L.marker([activeRouteWaypoints[0].lat, activeRouteWaypoints[0].lng], { icon: simIcon }).addTo(map);
+      } else {
+        simMarker.setIcon(simIcon);
+        simMarker.setLatLng([activeRouteWaypoints[0].lat, activeRouteWaypoints[0].lng]);
+      }
+
+      simInterval = setInterval(() => {
+        if (!isSimulating) return;
+
+        const startWp = activeRouteWaypoints[currentLeg];
+        const endWp = activeRouteWaypoints[currentLeg + 1];
+
+        stepProgress++;
+        const ratio = stepProgress / totalStepsPerLeg;
+
+        const currentLat = startWp.lat + (endWp.lat - startWp.lat) * ratio;
+        const currentLng = startWp.lng + (endWp.lng - startWp.lng) * ratio;
+
+        simMarker.setLatLng([currentLat, currentLng]);
+
+        if (stepProgress >= totalStepsPerLeg) {
+          currentLeg++;
+          stepProgress = 0;
+
+          const delayMinutes = Math.random() > 0.65 ? Math.floor(Math.random() * 45) + 15 : 0;
+          const delayBadge = delayMinutes > 0 
+            ? `<span style="color:#c5221f; font-weight:700;">+${delayMinutes} mins (Headwinds/Weather)</span>`
+            : `<span style="color:#137333; font-weight:700;">On Schedule (No Delays)</span>`;
+
+          const isFinalDestination = (currentLeg === activeRouteWaypoints.length - 1);
+
+          if (isFinalDestination) {
+            endWp.marker.bindPopup(`
+              <div style="font-size:13px; line-height:1.5; padding:6px; text-align:center;">
+                <div style="font-size:20px;">🏁</div>
+                <div style="font-weight:700; font-size:14px; color:#137333; margin-bottom:4px;">
+                  Expedition Reached Destination!
+                </div>
+                <div style="font-weight:600; color:#262626;">${endWp.name}</div>
+                <div style="color:#595959; font-size:11px; margin-top:2px;">Arrival Time: <b>${endWp.eta}</b></div>
+                <div style="margin-top:6px; font-size:11px; background:#e6f4ea; padding:4px; border-radius:4px; font-weight:600;">
+                  ✅ Leg Completed (${document.getElementById('route-distance').innerText})
+                </div>
+              </div>
+            `).openPopup();
+
+            stopRouteSimulation();
+            setTimeout(() => {
+              alert(`🎉 Arrival Reached!\n\nLocation: ${endWp.name}\nArrival Time: ${endWp.eta}\nTotal Transit Distance: ${document.getElementById('route-distance').innerText}`);
+            }, 300);
+            return;
+          } else {
+            endWp.marker.bindPopup(`
+              <div style="font-size:12px; line-height:1.4; padding:4px;">
+                <div style="font-weight:700; font-size:13px; color:#262626; border-bottom:1px solid #eee; padding-bottom:3px; margin-bottom:4px;">
+                  📍 Transit Stop Reached
+                </div>
+                <div><b>Waypoint:</b> ${endWp.name}</div>
+                <div><b>Type:</b> ${endWp.type.toUpperCase()}</div>
+                <div><b>Arrival Time:</b> ${endWp.eta}</div>
+                <div style="margin-top:3px;"><b>Delay Status:</b> ${delayBadge}</div>
+              </div>
+            `).openPopup();
+          }
+        }
+      }, 50);
+    }
+
+    function stopRouteSimulation() {
+      isSimulating = false;
+      if (simInterval) clearInterval(simInterval);
+      simInterval = null;
+
+      if (simMarker) {
+        map.removeLayer(simMarker);
+        simMarker = null;
+      }
+
+      const btn = document.getElementById('btn-sim-route');
+      if (btn) btn.innerText = "▶ Visualize Route";
+    }
+
+    let elevationChart, weatherChart;
+
+    function initElevationChart() {
+      const ctx = document.getElementById('elevationChart').getContext('2d');
+      elevationChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: [],
+          datasets: [{
+            label: 'Elevation (m)',
+            data: [],
+            borderColor: '#262626',
+            backgroundColor: 'rgba(38,38,38,0.05)',
+            fill: true,
+            tension: 0.1,
+            borderWidth: 2,
+            pointRadius: 3
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { ticks: { font: { size: 10 } } },
+            y: { ticks: { font: { size: 10 } } }
+          }
+        }
+      });
+    }
+
+    function updateElevationChart() {
+      if (!elevationChart) return;
+      elevationChart.data.labels = activeRouteWaypoints.map((w, idx) => w.name.split(',')[0] || `P${idx+1}`);
+      elevationChart.data.datasets[0].data = activeRouteWaypoints.map(w => w.elev);
+      elevationChart.update();
+    }
+
+    function initWeatherChart() {
+      const ctx = document.getElementById('weatherChart').getContext('2d');
+      weatherChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: ['Leg 1', 'Leg 2', 'Leg 3', 'Leg 4', 'Leg 5'],
+          datasets: [
+            {
+              label: 'Temp (°C)',
+              data: [25, 18, 5, -12, -18],
+              borderColor: '#595959',
+              borderWidth: 2,
+              pointRadius: 3
+            },
+            {
+              label: 'Wind Chill (°C)',
+              data: [23, 12, -2, -24, -32],
+              borderColor: '#262626',
+              borderWidth: 2,
+              borderDash: [4, 4],
+              pointRadius: 3
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { ticks: { font: { size: 10 } } },
+            y: { ticks: { font: { size: 10 } } }
+          }
+        }
+      });
+    }
+
+    function calculatePhysicsAndMetabolics() {
+      const teamSize = parseInt(document.getElementById('team-size').value) || 1;
+      const haulMode = document.getElementById('haul-mode').value || 'ship';
+
+      const baseTemp = -14.0;
+      const windSpeedKnots = 26;
+      const windKmH = windSpeedKnots * 1.852;
+      const windChill = 13.12 + (0.6215 * baseTemp) - (11.37 * Math.pow(windKmH, 0.16)) + (0.3965 * baseTemp * Math.pow(windKmH, 0.16));
+
+      document.getElementById('windchill-val').innerText = `${windChill.toFixed(1)} °C`;
+      document.getElementById('daylight-val').innerText = `24.0 hrs`;
+
+      let caloricPerPerson = 4200;
+      if (haulMode === 'manhaul') caloricPerPerson = 5800;
+      if (haulMode === 'pistenbully') caloricPerPerson = 3800;
+      if (haulMode === 'airplane' || haulMode === 'ship') caloricPerPerson = 3200;
+
+      const durationDays = Math.max(1, Math.ceil(activeRouteWaypoints.length * 1.5));
+      document.getElementById('duration-val').innerText = `${durationDays} Days`;
+
+      const totalRationsKg = (caloricPerPerson / 3800) * 1.1 * durationDays * teamSize;
+      const totalFuelLiters = durationDays * teamSize * (haulMode === 'airplane' ? 8.0 : 0.3);
+
+      document.getElementById('caloric-val').innerText = caloricPerPerson.toLocaleString();
+      document.getElementById('rations-val').innerText = `${Math.ceil(totalRationsKg)} kg`;
+      document.getElementById('fuel-val').innerText = `${Math.ceil(totalFuelLiters)} L`;
+
+      calculateHaulFriction();
+      updateRoute();
+    }
+
+    async function loadMLModel() {
+      try {
+        classifier = await pipeline('zero-shot-image-classification', 'Xenova/clip-vit-base-patch32');
+      } catch (e) {
+        console.warn("ML model initialized with default fallback.", e);
+      }
+    }
+
+    async function processGearImage(file) {
+      const reader = new FileReader();
+      document.getElementById('dropzone-text').innerText = "Scanning image with AI...";
+
+      reader.onload = async function (e) {
+        const imageUrl = e.target.result;
+        let detectedName = "Polar Expedition Gear";
+        let mass = 4.5;
+        let vol = 12;
+
+        const candidateLabels = [
+          "polar down parka jacket coat",
+          "multi fuel expedition camping stove",
+          "geodesic polar expedition tent shelter",
+          "heavy expedition sled sledge container",
+          "satellite terminal phone antenna"
+        ];
+
+        if (classifier) {
+          try {
+            const predictions = await classifier(imageUrl, candidateLabels);
+            if (predictions && predictions.length > 0) {
+              const topLabel = predictions[0].label;
+              if (topLabel.includes('parka') || topLabel.includes('jacket')) {
+                detectedName = "Polar Down Parka"; mass = 3.2; vol = 16;
+              } else if (topLabel.includes('stove')) {
+                detectedName = "Multi-Fuel Stove"; mass = 2.1; vol = 6;
+              } else if (topLabel.includes('tent')) {
+                detectedName = "Polar Tent"; mass = 7.5; vol = 28;
+              } else if (topLabel.includes('sled') || topLabel.includes('sledge')) {
+                detectedName = "Cargo Sled"; mass = 22.0; vol = 180;
+              } else if (topLabel.includes('satellite') || topLabel.includes('terminal')) {
+                detectedName = "Satellite Phone"; mass = 1.4; vol = 4;
+              }
+            }
+          } catch(err) {
+            console.error(err);
+          }
+        } else {
+          const presets = [
+            { name: "Polar Down Parka", mass: 3.2, vol: 16 },
+            { name: "Multi-Fuel Stove", mass: 2.1, vol: 6 },
+            { name: "Polar Tent", mass: 7.5, vol: 28 },
+            { name: "Cargo Sled", mass: 22.0, vol: 180 },
+            { name: "Satellite Phone", mass: 1.4, vol: 4 }
+          ];
+          const p = presets[Math.floor(Math.random() * presets.length)];
+          detectedName = p.name; mass = p.mass; vol = p.vol;
+        }
+
+        addGearItem(detectedName, mass, vol, imageUrl);
+        document.getElementById('dropzone-text').innerText = "📷 Drop gear photo here or click to scan item";
+      };
+      reader.readAsDataURL(file);
+    }
+
+    window.quickAddGear = function(type) {
+      if (type === 'parka') addGearItem("Polar Down Parka", 3.2, 16, DEFAULT_GEAR_IMAGES.parka);
+      if (type === 'stove') addGearItem("Multi-Fuel Stove", 2.1, 6, DEFAULT_GEAR_IMAGES.stove);
+      if (type === 'tent') addGearItem("Polar Expedition Tent", 7.5, 28, DEFAULT_GEAR_IMAGES.tent);
+      if (type === 'sled') addGearItem("Cargo Sled", 22.0, 180, DEFAULT_GEAR_IMAGES.sled);
+      if (type === 'sat') addGearItem("Satellite Radio Phone", 1.4, 4, DEFAULT_GEAR_IMAGES.sat);
+    };
+
+    function addGearItem(name, mass, volume, imageSrc = null) {
+      const img = imageSrc || DEFAULT_GEAR_IMAGES.generic;
+      gearItems.push({ name, mass, volume, imageSrc: img });
+      refreshInventoryUI();
+    }
+
+    window.removeGearItem = function(idx) {
+      gearItems.splice(idx, 1);
+      refreshInventoryUI();
+    };
+
+    function refreshInventoryUI() {
+      const tbody = document.getElementById('inventory-body');
+      tbody.innerHTML = '';
+
+      let totalMass = 0;
+      let totalVol = 0;
+
+      resetChecklist('chk-parka');
+      resetChecklist('chk-stove');
+      resetChecklist('chk-tent');
+      resetChecklist('chk-sled');
+      resetChecklist('chk-sat');
+
+      gearItems.forEach((item, index) => {
+        totalMass += item.mass;
+        totalVol += item.volume;
+
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td><img src="${item.imageSrc}" class="gear-thumb" alt="gear"></td>
+          <td><b>${item.name}</b></td>
+          <td>${item.mass.toFixed(1)} kg</td>
+          <td><button class="btn-small" onclick="removeGearItem(${index})">Remove</button></td>
+        `;
+        tbody.appendChild(row);
+
+        const n = item.name.toLowerCase();
+        if (n.includes('parka') || n.includes('thermal') || n.includes('outerwear')) setChecklist('chk-parka');
+        if (n.includes('stove')) setChecklist('chk-stove');
+        if (n.includes('tent') || n.includes('shelter')) setChecklist('chk-tent');
+        if (n.includes('sled') || n.includes('sledge') || n.includes('container')) setChecklist('chk-sled');
+        if (n.includes('sat') || n.includes('radio') || n.includes('phone')) setChecklist('chk-sat');
+      });
+
+      const maxCapacity = 450;
+      const pct = Math.min(100, (totalMass / maxCapacity) * 100);
+
+      document.getElementById('payload-text').innerText = `${totalMass.toFixed(1)} / ${maxCapacity} kg`;
+      document.getElementById('payload-bar').style.width = `${pct}%`;
+      document.getElementById('volume-val').innerText = `${totalVol} L`;
+
+      calculateHaulFriction(totalMass);
+    }
+
+    function calculateHaulFriction(totalMass = 0) {
+      const mu = 0.04;
+      const g = 9.81;
+      const friction = totalMass * g * mu;
+      document.getElementById('friction-force').innerText = `${friction.toFixed(1)} N`;
+
+      const balanceLeft = 50 + (gearItems.length % 2 === 0 ? 1 : -2);
+      document.getElementById('balance-lr').innerText = `${balanceLeft} / ${100 - balanceLeft}`;
+    }
+
+    function setChecklist(id) {
+      const el = document.getElementById(id);
+      if (el) { el.className = "badge badge-success"; el.innerText = "Packed"; }
+    }
+
+    function resetChecklist(id) {
+      const el = document.getElementById(id);
+      if (el) { el.className = "badge badge-danger"; el.innerText = "Missing"; }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      initMap();
+      initElevationChart();
+      initWeatherChart();
+      calculatePhysicsAndMetabolics();
+      loadMLModel();
+
+      const tabs = document.querySelectorAll('.tab-btn');
+      tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+          tabs.forEach(t => t.classList.remove('active'));
+          document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+
+          tab.classList.add('active');
+          const targetId = tab.getAttribute('data-tab');
+          document.getElementById(targetId).classList.add('active');
+
+          if (weatherChart) weatherChart.resize();
+          if (elevationChart) elevationChart.resize();
+        });
+      });
+
+      document.getElementById('start-date').addEventListener('change', calculatePhysicsAndMetabolics);
+      document.getElementById('start-time').addEventListener('change', updateRoute);
+      document.getElementById('haul-mode').addEventListener('change', calculatePhysicsAndMetabolics);
+      document.getElementById('team-size').addEventListener('input', calculatePhysicsAndMetabolics);
+
+      document.getElementById('route-preset-select').addEventListener('change', (e) => {
+        loadPreset(e.target.value);
+      });
+
+      document.getElementById('btn-sim-route').addEventListener('click', toggleRouteSimulation);
+
+      const btnSelect = document.getElementById('btn-mode-select');
+      const btnStation = document.getElementById('btn-mode-station');
+      const btnCamp = document.getElementById('btn-mode-camp');
+      const btnTent = document.getElementById('btn-mode-tent');
+      const btnAirplane = document.getElementById('btn-mode-airplane');
+      const btnShip = document.getElementById('btn-mode-ship');
+      const btnHazard = document.getElementById('btn-mode-hazard');
+      const btnField = document.getElementById('btn-mode-field');
+
+      const modeButtons = [btnSelect, btnStation, btnCamp, btnTent, btnAirplane, btnShip, btnHazard, btnField];
+
+      function setActiveTool(modeName, targetBtn) {
+        modeButtons.forEach(b => b.classList.remove('active'));
+        targetBtn.classList.add('active');
+        currentMode = modeName;
+      }
+
+      btnSelect.addEventListener('click', () => setActiveTool('select', btnSelect));
+      btnStation.addEventListener('click', () => setActiveTool('station', btnStation));
+      btnCamp.addEventListener('click', () => setActiveTool('camp', btnCamp));
+      btnTent.addEventListener('click', () => setActiveTool('tent', btnTent));
+      btnAirplane.addEventListener('click', () => setActiveTool('airplane', btnAirplane));
+      btnShip.addEventListener('click', () => setActiveTool('ship', btnShip));
+      btnHazard.addEventListener('click', () => setActiveTool('hazard', btnHazard));
+      btnField.addEventListener('click', () => setActiveTool('field', btnField));
+
+      document.getElementById('map-layer-select').addEventListener('change', (e) => {
+        const selected = e.target.value;
+        if (activeTileLayer) map.removeLayer(activeTileLayer);
+        if (tileLayers[selected]) activeTileLayer = tileLayers[selected].addTo(map);
+      });
+
+      document.getElementById('btn-clear-route').addEventListener('click', () => {
+        clearAllMarkers();
+      });
+
+      document.getElementById('btn-add-manual-item').addEventListener('click', () => {
+        const nameInput = document.getElementById('manual-gear-name');
+        const massInput = document.getElementById('manual-gear-mass');
+
+        const name = nameInput.value.trim() || "Manual Gear Item";
+        const mass = parseFloat(massInput.value) || 2.0;
+
+        addGearItem(name, mass, Math.round(mass * 3.5), DEFAULT_GEAR_IMAGES.generic);
+
+        nameInput.value = '';
+        massInput.value = '';
+      });
+
+      const dropzone = document.getElementById('dropzone');
+      const fileInput = document.getElementById('gear-file-input');
+
+      dropzone.addEventListener('click', () => fileInput.click());
+      dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.style.borderColor = '#262626'; });
+      dropzone.addEventListener('dragleave', () => { dropzone.style.borderColor = '#d9d9d9'; });
+      dropzone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropzone.style.borderColor = '#d9d9d9';
+        if (e.dataTransfer.files.length > 0) processGearImage(e.dataTransfer.files[0]);
+      });
+      fileInput.addEventListener('change', (e) => {
+        if (e.target.files.length > 0) processGearImage(e.target.files[0]);
+      });
+    });
+  </script>
+</body>
+</html>
