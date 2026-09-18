@@ -1,0 +1,1303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>dolphin - Antarctic Cargo Operations</title>
+  
+  <link rel="icon" type="image/png" href="/images/cargo-favicon.png">
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: #f8fafc;
+      color: #0f172a;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* Top Navigation Header */
+    header {
+      height: 48px;
+      background-color: #ffffff;
+      border-bottom: 1px solid #cbd5e1;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      flex-shrink: 0;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .back-btn {
+      text-decoration: none;
+      color: #0f172a;
+      font-weight: 600;
+      font-size: 13px;
+      padding: 5px 12px;
+      border: 1px solid #cbd5e1;
+      border-radius: 4px;
+      background-color: #ffffff;
+    }
+
+    .back-btn:hover {
+      background-color: #f1f5f9;
+    }
+
+    .brand {
+      font-size: 16px;
+      font-weight: 700;
+      color: #0f172a;
+      letter-spacing: -0.3px;
+    }
+
+    .brand-subtitle {
+      font-size: 12px;
+      color: #64748b;
+      margin-left: 8px;
+      font-weight: 400;
+    }
+
+    .sim-toggle-btn {
+      background-color: #0f172a;
+      color: #ffffff;
+      border: none;
+      padding: 6px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .sim-toggle-btn:hover {
+      background-color: #334155;
+    }
+
+    /* 3-Column Layout */
+    .app-body {
+      display: flex;
+      flex: 1;
+      height: calc(100vh - 48px);
+      overflow: hidden;
+    }
+
+    /* Left Sidebar Panel */
+    .sidebar-left {
+      width: 330px;
+      background-color: #ffffff;
+      border-right: 1px solid #cbd5e1;
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      z-index: 10;
+    }
+
+    /* Metrics Dashboard */
+    .stats-grid {
+      padding: 12px;
+      border-bottom: 1px solid #cbd5e1;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      background-color: #f8fafc;
+    }
+
+    .stat-card {
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      padding: 8px 10px;
+      border-radius: 4px;
+    }
+
+    .stat-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      color: #64748b;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    .stat-value {
+      font-size: 18px;
+      font-weight: 700;
+      color: #0f172a;
+      margin-top: 2px;
+    }
+
+    /* Orders Section */
+    .orders-header {
+      padding: 10px 12px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #475569;
+      border-bottom: 1px solid #e2e8f0;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      background-color: #ffffff;
+    }
+
+    .orders-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px;
+    }
+
+    .order-card {
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 4px;
+      padding: 10px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .order-card:hover {
+      border-color: #64748b;
+      background-color: #f8fafc;
+    }
+
+    .order-card.active {
+      border: 2px solid #2563eb;
+      background-color: #eff6ff;
+    }
+
+    .order-id-line {
+      font-weight: 700;
+      font-size: 12px;
+      color: #0f172a;
+      margin-bottom: 4px;
+    }
+
+    .order-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: #334155;
+      margin-bottom: 4px;
+    }
+
+    .order-address {
+      font-size: 11px;
+      color: #64748b;
+      line-height: 1.3;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 6px;
+      font-size: 10px;
+      font-weight: 700;
+      border-radius: 3px;
+      margin-top: 6px;
+      text-transform: uppercase;
+    }
+
+    .badge-in-progress { background-color: #dbeafe; color: #1e40af; }
+    .badge-reached { background-color: #dcfce7; color: #166534; }
+    .badge-disrupted { background-color: #fee2e2; color: #991b1b; }
+
+    /* Map Center Area */
+    .map-container {
+      flex: 1;
+      position: relative;
+      background-color: #e2e8f0;
+    }
+
+    #map {
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Custom Vessel Markers */
+    .custom-vessel-marker {
+      background: transparent;
+      border: none;
+    }
+
+    .vessel-icon-wrapper {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.3));
+    }
+
+    .vessel-icon-wrapper img {
+      width: 28px;
+      height: 28px;
+    }
+
+    /* Right Details Panel */
+    .sidebar-right {
+      width: 360px;
+      background-color: #ffffff;
+      border-left: 1px solid #cbd5e1;
+      display: none;
+      flex-direction: column;
+      flex-shrink: 0;
+      overflow-y: auto;
+      padding: 14px;
+      z-index: 10;
+    }
+
+    .details-title-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #e2e8f0;
+      padding-bottom: 8px;
+      margin-bottom: 12px;
+    }
+
+    .details-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    .close-btn {
+      border: 1px solid #cbd5e1;
+      background: #ffffff;
+      font-size: 12px;
+      padding: 2px 8px;
+      cursor: pointer;
+      border-radius: 3px;
+      color: #475569;
+    }
+
+    .close-btn:hover {
+      background-color: #f1f5f9;
+    }
+
+    .section-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: #475569;
+      margin: 12px 0 6px 0;
+      letter-spacing: 0.5px;
+    }
+
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+
+    .metric-box {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      padding: 6px 8px;
+      border-radius: 3px;
+    }
+
+    .metric-lbl {
+      font-size: 10px;
+      color: #64748b;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .metric-val {
+      font-size: 12px;
+      font-weight: 700;
+      color: #0f172a;
+      margin-top: 2px;
+    }
+
+    .progress-bar-bg {
+      width: 100%;
+      height: 6px;
+      background: #e2e8f0;
+      border-radius: 3px;
+      overflow: hidden;
+      margin-top: 4px;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: #2563eb;
+      width: 0%;
+      transition: width 0.2s ease;
+    }
+
+    .weather-box {
+      background-color: #f0f9ff;
+      border: 1px solid #bae6fd;
+      padding: 8px;
+      border-radius: 3px;
+      margin-top: 6px;
+    }
+
+    .weather-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: #0369a1;
+      margin-bottom: 2px;
+    }
+
+    .table-route {
+      width: 100%;
+      font-size: 11px;
+      border-collapse: collapse;
+      margin-top: 6px;
+    }
+
+    .table-route th, .table-route td {
+      border: 1px solid #e2e8f0;
+      padding: 4px 6px;
+      text-align: left;
+    }
+
+    .table-route th {
+      background: #f8fafc;
+      font-weight: 600;
+      color: #475569;
+    }
+
+    .action-btn {
+      width: 100%;
+      background-color: #2563eb;
+      color: #ffffff;
+      border: none;
+      padding: 8px;
+      font-weight: 600;
+      font-size: 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    .action-btn:hover {
+      background-color: #1d4ed8;
+    }
+
+    .btn-secondary {
+      background-color: #ffffff;
+      color: #0f172a;
+      border: 1px solid #cbd5e1;
+      margin-top: 6px;
+    }
+
+    .btn-secondary:hover {
+      background-color: #f8fafc;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header Bar -->
+  <header>
+    <div class="header-left">
+      <a href="index.html" class="back-btn">&larr; Back</a>
+      <div class="brand">dolphin <span class="brand-subtitle">Antarctic Cargo Logistics</span></div>
+    </div>
+    <button class="sim-toggle-btn" id="btn-toggle-sim" onclick="toggleSimulation()">Pause Live Simulation</button>
+  </header>
+
+  <!-- Application Layout -->
+  <div class="app-body">
+    
+    <!-- Left Sidebar -->
+    <div class="sidebar-left">
+      
+      <!-- Top Metrics Dashboard -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">In Progress</div>
+          <div class="stat-value" id="stat-in-progress">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Disrupted</div>
+          <div class="stat-value" id="stat-disrupted">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Reached</div>
+          <div class="stat-value" id="stat-success">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Reached Rate</div>
+          <div class="stat-value" id="stat-rate">0%</div>
+        </div>
+      </div>
+
+      <!-- Orders List -->
+      <div class="orders-header">Active & Completed Shipments</div>
+      <div class="orders-list" id="orders-list"></div>
+    </div>
+
+    <!-- Map Viewport -->
+    <div class="map-container">
+      <div id="map"></div>
+    </div>
+
+    <!-- Right Side Details Panel -->
+    <div class="sidebar-right" id="details-panel">
+      <div class="details-title-row">
+        <div class="details-title" id="det-title">Order Details</div>
+        <button class="close-btn" onclick="resetMapView()">Close</button>
+      </div>
+
+      <div class="section-label">Vessel & Command</div>
+      <div class="metrics-grid">
+        <div class="metric-box">
+          <div class="metric-lbl">Transport Type</div>
+          <div class="metric-val" id="det-type">-</div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-lbl">Model</div>
+          <div class="metric-val" id="det-model">-</div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-lbl">Vessel Name</div>
+          <div class="metric-val" id="det-vessel-name">-</div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-lbl">Captain</div>
+          <div class="metric-val" id="det-captain">-</div>
+        </div>
+      </div>
+
+      <div class="section-label">Payload & Physics</div>
+      <div class="metrics-grid">
+        <div class="metric-box">
+          <div class="metric-lbl">Cargo Mass</div>
+          <div class="metric-val" id="det-mass">-</div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-lbl">Cargo Volume</div>
+          <div class="metric-val" id="det-volume">-</div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-lbl">Current Speed</div>
+          <div class="metric-val" id="det-speed">-</div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-lbl">Distance Left</div>
+          <div class="metric-val" id="det-dist-rem">-</div>
+        </div>
+      </div>
+
+      <div class="section-label">Journey Completion</div>
+      <div class="metric-box">
+        <div style="display: flex; justify-content: space-between;">
+          <div class="metric-lbl">Progress</div>
+          <div class="metric-lbl" id="det-progress-text">0%</div>
+        </div>
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill" id="det-progress-bar"></div>
+        </div>
+      </div>
+
+      <div class="section-label">Live Open-Meteo Weather (Cached)</div>
+      <div class="weather-box" id="weather-box">
+        <div class="weather-row"><span>Status:</span> <strong id="wx-status">Loading...</strong></div>
+        <div class="weather-row"><span>Temperature:</span> <strong id="wx-temp">-</strong></div>
+        <div class="weather-row"><span>Wind Speed:</span> <strong id="wx-wind">-</strong></div>
+        <div class="weather-row"><span>Wind Direction:</span> <strong id="wx-dir">-</strong></div>
+      </div>
+
+      <div class="section-label">Weather Impact & Delay</div>
+      <div class="metrics-grid">
+        <div class="metric-box">
+          <div class="metric-lbl">Calculated Delay</div>
+          <div class="metric-val" id="det-delay">-</div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-lbl">Delay Reason</div>
+          <div class="metric-val" style="font-size: 11px;" id="det-delay-reason">-</div>
+        </div>
+      </div>
+
+      <div class="section-label">Route Iteration & Waypoints</div>
+      <table class="table-route">
+        <thead>
+          <tr>
+            <th>Waypoint</th>
+            <th>Coords</th>
+          </tr>
+        </thead>
+        <tbody id="route-table-body"></tbody>
+      </table>
+
+      <button class="action-btn btn-secondary" onclick="resetMapView()">Show All Vessels</button>
+    </div>
+
+  </div>
+
+  <!-- Leaflet JS, PolylineDecorator, and Heatmap JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet-polylinedecorator@1.6.0/dist/leaflet.polylineDecorator.js"></script>
+  <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+
+  <script>
+    // Indian Antarctic Expedition Fleet Logistics Data
+    const ordersData = [
+      {
+        id: "IND-ANT-2026-01",
+        num: 1,
+        title: "Heavy Machinery & Station Spares",
+        address: "Bharathi Station, Larsemann Hills, East Antarctica (69°24'S, 76°11'E)",
+        station: "Bharathi",
+        type: "Ship",
+        status: "In Progress",
+        model: "Ice-Strengthened Polar Cargo Ship",
+        name: "PRV Sagar Nidhi",
+        captain: "Capt. Eshaan",
+        cargoMassTons: 420,
+        cargoVolumeM3: 1100,
+        speedKnots: 12.5,
+        totalDistKm: 8200,
+        completedDistKm: 4200,
+        delayHours: 18.5,
+        delayReason: "High pack ice density near 64°S",
+        route: [
+          { name: "Cape Town Port (Start)", lat: -33.9188, lon: 18.4233 },
+          { name: "Roaring Forties Transit", lat: -46.5000, lon: 32.1000 },
+          { name: "50s Ocean Waypoint", lat: -56.2000, lon: 51.5000 },
+          { name: "Pack Ice Boundary", lat: -64.1000, lon: 68.3000 },
+          { name: "Bharathi Station (End)", lat: -69.4078, lon: 76.1872 }
+        ]
+      },
+      {
+        id: "IND-ANT-2026-02",
+        num: 2,
+        title: "Atmospheric Sensors & Provisions",
+        address: "Maitri Station, Schirmacher Oasis, Antarctica (70°45'S, 11°44'E)",
+        station: "Maitri",
+        type: "Plane",
+        status: "In Progress",
+        model: "Ilyushin Il-76 Heavy Transport",
+        name: "IAF Polar Express",
+        captain: "Capt. Manvitha",
+        cargoMassTons: 18.5,
+        cargoVolumeM3: 85,
+        speedKnots: 360,
+        totalDistKm: 4350,
+        completedDistKm: 1200,
+        delayHours: 0.0,
+        delayReason: "Clear weather window",
+        route: [
+          { name: "Cape Town Airport (Start)", lat: -33.9715, lon: 18.6021 },
+          { name: "South Atlantic Midpoint", lat: -51.5000, lon: 15.2000 },
+          { name: "Novo Airfield Runway", lat: -70.8283, lon: 11.6425 },
+          { name: "Maitri Station (End)", lat: -70.7658, lon: 11.7358 }
+        ]
+      },
+      {
+        id: "IND-ANT-2026-03",
+        num: 3,
+        title: "Winter Fuel Supply & Station Upgrades",
+        address: "Maitri Station via India Bay Shelf (70°05'S, 11°54'E)",
+        station: "Maitri",
+        type: "Ship",
+        status: "Disrupted",
+        model: "Heavy Icebreaker Cargo Vessel",
+        name: "INS Sagar Samudra",
+        captain: "Capt. Tanusha",
+        cargoMassTons: 650,
+        cargoVolumeM3: 1800,
+        speedKnots: 8.5,
+        totalDistKm: 9800,
+        completedDistKm: 6100,
+        delayHours: 42.0,
+        delayReason: "Severe blizzard & thick fast ice",
+        route: [
+          { name: "Mormugao Port, Goa (Start)", lat: 15.4094, lon: 73.7958 },
+          { name: "Port Louis Waypoint", lat: -20.1609, lon: 57.5012 },
+          { name: "Southern Ocean Waypoint", lat: -48.0000, lon: 42.0000 },
+          { name: "Fast Ice Zone", lat: -68.5000, lon: 12.0000 },
+          { name: "India Bay Ice Shelf", lat: -70.0833, lon: 11.9000 },
+          { name: "Maitri Station (End)", lat: -70.7658, lon: 11.7358 }
+        ]
+      },
+      {
+        id: "IND-ANT-2026-04",
+        num: 4,
+        title: "Inland Traverse Fuel & Habitat Modules",
+        address: "Maitri to Dome C Traverse, Antarctica",
+        station: "Maitri Inland",
+        type: "Train",
+        status: "In Progress",
+        model: "Heavy Snow Crawler Train",
+        name: "Antarctic Overland Express",
+        captain: "Capt. Midhun",
+        cargoMassTons: 120,
+        cargoVolumeM3: 350,
+        speedKnots: 25,
+        totalDistKm: 1800,
+        completedDistKm: 300,
+        delayHours: 4.0,
+        delayReason: "Crevasse field detour navigation",
+        route: [
+          { name: "Maitri Base Camp (Start)", lat: -70.7658, lon: 11.7358 },
+          { name: "Watzmann Ridge Waypoint", lat: -71.3000, lon: 12.1000 },
+          { name: "Glacier Plateau Depot", lat: -73.5000, lon: 14.8000 },
+          { name: "Dome C Inland Station (End)", lat: -75.1000, lon: 18.2000 }
+        ]
+      },
+      {
+        id: "IND-ANT-2026-05",
+        num: 5,
+        title: "Emergency Medical & Cryo Samples",
+        address: "Maitri Station Airfield, Antarctica (70°45'S, 11°44'E)",
+        station: "Maitri",
+        type: "Plane",
+        status: "In Progress",
+        model: "Polar Hercules Airlifter",
+        name: "IAF Him Surya",
+        captain: "Capt. Altamash",
+        cargoMassTons: 12.0,
+        cargoVolumeM3: 50,
+        speedKnots: 310,
+        totalDistKm: 4350,
+        completedDistKm: 2800,
+        delayHours: 3.5,
+        delayReason: "High altitude jetstream turbulence",
+        route: [
+          { name: "Cape Town Airport (Start)", lat: -33.9715, lon: 18.6021 },
+          { name: "Sub-Antarctic Waypoint", lat: -52.8000, lon: 16.1000 },
+          { name: "Novo Runway Approach", lat: -70.8283, lon: 11.6425 },
+          { name: "Maitri Station (End)", lat: -70.7658, lon: 11.7358 }
+        ]
+      },
+      {
+        id: "IND-ANT-2026-06",
+        num: 6,
+        title: "Clean Energy Solar Array Modules",
+        address: "Bharathi Station, East Antarctica (69°24'S, 76°11'E)",
+        station: "Bharathi",
+        type: "Ship",
+        status: "Reached",
+        model: "Naval Auxiliary Supply Vessel",
+        name: "INS Sagar Dhwani",
+        captain: "Capt. Rushil",
+        cargoMassTons: 510,
+        cargoVolumeM3: 1400,
+        speedKnots: 13.0,
+        totalDistKm: 8200,
+        completedDistKm: 8200,
+        delayHours: 0.0,
+        delayReason: "On-schedule delivery",
+        route: [
+          { name: "Mormugao Port, Goa (Start)", lat: 15.4094, lon: 73.7958 },
+          { name: "Equator Crossing", lat: 0.0000, lon: 68.0000 },
+          { name: "Southern Indian Ocean", lat: -38.5000, lon: 62.0000 },
+          { name: "Prydz Bay Entry", lat: -67.1000, lon: 74.5000 },
+          { name: "Bharathi Station (End)", lat: -69.4078, lon: 76.1872 }
+        ]
+      }
+    ];
+
+    let map;
+    let mapLayersControl;
+    let orderLayers = {};
+    let selectedOrderId = null;
+    let weatherHeatLayer = null;
+    
+    // Live Simulation Loop Variables
+    let isSimulationRunning = true;
+    let lastAnimTimestamp = null;
+    let lastWeatherUpdateKm = -1;
+
+    // Local Storage Weather Caching Configuration
+    const WEATHER_CACHE_KEY = 'dolphin_weather_cache_v1';
+    const CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes cache
+
+    const statusColors = {
+      'In Progress': '#2563eb',
+      'Reached': '#16a34a',
+      'Disrupted': '#dc2626'
+    };
+
+    const iconUrls = {
+      'Plane': 'https://img.icons8.com/?size=100&id=HrxNQff0Qrmc&format=png&color=000000',
+      'Train': 'https://img.icons8.com/?size=100&id=11354&format=png&color=000000',
+      'Ship': 'https://img.icons8.com/?size=100&id=15133&format=png&color=000000'
+    };
+
+    // Location markers (Start/End & Stoppage)
+    const locationMarkerIcon = L.icon({
+      iconUrl: 'https://img.icons8.com/?size=100&id=13778&format=png&color=000000',
+      iconSize: [28, 28],
+      iconAnchor: [14, 28],
+      popupAnchor: [0, -28]
+    });
+
+    const stoppageMarkerIcon = L.icon({
+      iconUrl: 'https://img.icons8.com/?size=100&id=19100&format=png&color=000000',
+      iconSize: [20, 20],
+      iconAnchor: [10, 20],
+      popupAnchor: [0, -20]
+    });
+
+    window.onload = function() {
+      precalculateRouteGeometries();
+      initDashboardStats();
+      renderOrderList();
+      initMap();
+      plotAllOrders();
+      initRainViewerRadar();
+      initLiveWeatherHeatmap();
+      startGlobalLiveSimulation();
+    };
+
+    // Weather LocalStorage Cache Helpers
+    function getCachedWeatherData(lat, lon) {
+      try {
+        const key = `${lat.toFixed(2)}_${lon.toFixed(2)}`;
+        const raw = localStorage.getItem(WEATHER_CACHE_KEY);
+        if (!raw) return null;
+        const cache = JSON.parse(raw);
+        const item = cache[key];
+        if (item && (Date.now() - item.timestamp < CACHE_TTL_MS)) {
+          return item.data;
+        }
+      } catch(e) {
+        console.warn("Weather cache read error:", e);
+      }
+      return null;
+    }
+
+    function setCachedWeatherData(lat, lon, data) {
+      try {
+        const key = `${lat.toFixed(2)}_${lon.toFixed(2)}`;
+        const raw = localStorage.getItem(WEATHER_CACHE_KEY);
+        const cache = raw ? JSON.parse(raw) : {};
+        cache[key] = {
+          timestamp: Date.now(),
+          data: data
+        };
+        localStorage.setItem(WEATHER_CACHE_KEY, JSON.stringify(cache));
+      } catch(e) {
+        console.warn("Weather cache write error:", e);
+      }
+    }
+
+    // Geodesic Distance Calculations
+    function getHaversineKm(lat1, lon1, lat2, lon2) {
+      const R = 6371;
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLon = (lon2 - lon1) * Math.PI / 180;
+      const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                Math.sin(dLon/2) * Math.sin(dLon/2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      return R * c;
+    }
+
+    // Compass Bearing Calculation for smooth icon rotation
+    function getBearing(lat1, lon1, lat2, lon2) {
+      const p1 = lat1 * Math.PI / 180;
+      const p2 = lat2 * Math.PI / 180;
+      const dLon = (lon2 - lon1) * Math.PI / 180;
+      const y = Math.sin(dLon) * Math.cos(p2);
+      const x = Math.cos(p1) * Math.sin(p2) - Math.sin(p1) * Math.cos(p2) * Math.cos(dLon);
+      let brng = Math.atan2(y, x) * 180 / Math.PI;
+      return (brng + 360) % 360;
+    }
+
+    function precalculateRouteGeometries() {
+      ordersData.forEach(order => {
+        let cumulative = 0;
+        const segments = [];
+        for (let i = 0; i < order.route.length - 1; i++) {
+          const p1 = order.route[i];
+          const p2 = order.route[i + 1];
+          const dist = getHaversineKm(p1.lat, p1.lon, p2.lat, p2.lon);
+          segments.push({
+            start: p1,
+            end: p2,
+            distKm: dist,
+            startKm: cumulative,
+            endKm: cumulative + dist
+          });
+          cumulative += dist;
+        }
+        order.computedTotalKm = cumulative;
+        order.segments = segments;
+      });
+    }
+
+    function getInterpolatedPointAndBearing(order, distKm) {
+      if (distKm <= 0) {
+        const p1 = order.route[0];
+        const p2 = order.route[1] || p1;
+        return { lat: p1.lat, lon: p1.lon, bearing: getBearing(p1.lat, p1.lon, p2.lat, p2.lon) };
+      }
+      if (distKm >= order.computedTotalKm) {
+        const last = order.route[order.route.length - 1];
+        const prev = order.route[order.route.length - 2] || last;
+        return { lat: last.lat, lon: last.lon, bearing: getBearing(prev.lat, prev.lon, last.lat, last.lon) };
+      }
+
+      for (let seg of order.segments) {
+        if (distKm >= seg.startKm && distKm <= seg.endKm) {
+          const ratio = seg.distKm > 0 ? (distKm - seg.startKm) / seg.distKm : 0;
+          const lat = seg.start.lat + (seg.end.lat - seg.start.lat) * ratio;
+          const lon = seg.start.lon + (seg.end.lon - seg.start.lon) * ratio;
+          const bearing = getBearing(seg.start.lat, seg.start.lon, seg.end.lat, seg.end.lon);
+          return { lat, lon, bearing };
+        }
+      }
+      return { lat: order.route[0].lat, lon: order.route[0].lon, bearing: 0 };
+    }
+
+    function createVesselIcon(type, heading) {
+      const url = iconUrls[type] || iconUrls['Ship']; 
+      const rotationOffset = (type === 'Ship') ? 180 : 0; 
+      return L.divIcon({
+        className: 'custom-vessel-marker',
+        html: `<div class="vessel-icon-wrapper" style="transform: rotate(${Math.round(heading + rotationOffset)}deg);">
+                 <img src="${url}" alt="${type}" />
+               </div>`,
+        iconSize: [32, 32],
+        iconAnchor: [16, 16]
+      });
+    }
+
+    function initDashboardStats() {
+      const inProgress = ordersData.filter(o => o.status === 'In Progress').length;
+      const disrupted = ordersData.filter(o => o.status === 'Disrupted').length;
+      const reached = ordersData.filter(o => o.status === 'Reached').length;
+      const total = ordersData.length;
+      const reachedRate = total > 0 ? ((reached / total) * 100).toFixed(1) : "0.0";
+
+      document.getElementById('stat-in-progress').innerText = inProgress;
+      document.getElementById('stat-disrupted').innerText = disrupted;
+      document.getElementById('stat-success').innerText = reached;
+      document.getElementById('stat-rate').innerText = `${reachedRate}%`;
+    }
+
+    function renderOrderList() {
+      const container = document.getElementById('orders-list');
+      container.innerHTML = '';
+
+      ordersData.forEach(order => {
+        const badgeClass = order.status === 'In Progress' ? 'badge-in-progress' :
+                          (order.status === 'Reached' ? 'badge-reached' : 'badge-disrupted');
+
+        const card = document.createElement('div');
+        card.className = `order-card ${order.id === selectedOrderId ? 'active' : ''}`;
+        card.id = `order-card-${order.id}`;
+        card.onclick = () => selectOrder(order.id);
+
+        card.innerHTML = `
+          <div class="order-id-line">${order.num}) ${order.id}</div>
+          <div class="order-title">${order.title}</div>
+          <div class="order-address">${order.address}</div>
+          <span class="badge ${badgeClass}" id="badge-${order.id}">${order.status}</span>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function updateOrderCardBadge(order) {
+      const badge = document.getElementById(`badge-${order.id}`);
+      if (badge) {
+        badge.innerText = order.status;
+        badge.className = `badge ${order.status === 'In Progress' ? 'badge-in-progress' : (order.status === 'Reached' ? 'badge-reached' : 'badge-disrupted')}`;
+      }
+    }
+
+    function initMap() {
+      const satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+        maxZoom: 18,
+        attribution: 'Esri World Imagery'
+      });
+
+      const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 18,
+        attribution: 'OpenStreetMap'
+      });
+
+      const terrain = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', {
+        maxZoom: 18,
+        attribution: 'Esri World Topo Map'
+      });
+
+      map = L.map('map', {
+        center: [-48.0, 40.0],
+        zoom: 3,
+        layers: [satellite]
+      });
+
+      const baseLayers = {
+        "Satellite Terrain": satellite,
+        "Standard Map": osm,
+        "Topographic Terrain": terrain
+      };
+
+      // Set collapsed: true to make layer switching panel collapsible
+      mapLayersControl = L.control.layers(baseLayers, {}, { collapsed: true }).addTo(map);
+    }
+
+    function plotAllOrders() {
+      ordersData.forEach(order => {
+        const latLngs = order.route.map(r => [r.lat, r.lon]);
+        const color = statusColors[order.status] || '#2563eb';
+
+        const polyline = L.polyline(latLngs, {
+          color: color,
+          weight: 4,
+          opacity: 0.85
+        }).addTo(map);
+
+        let decorator = null;
+        if (typeof L.polylineDecorator === 'function') {
+          decorator = L.polylineDecorator(polyline, {
+            patterns: [
+              {
+                offset: '10%',
+                repeat: 120,
+                symbol: L.Symbol.arrowHead({
+                  pixelSize: 10,
+                  polygon: false,
+                  pathOptions: { stroke: true, color: color, weight: 2.5 }
+                })
+              }
+            ]
+          }).addTo(map);
+        }
+
+        // Add Waypoint Location Markers (Start, Stoppage Points, and End)
+        const waypointMarkers = [];
+        const routeLen = order.route.length;
+        
+        order.route.forEach((pt, idx) => {
+          let markerIcon = stoppageMarkerIcon;
+          let labelPrefix = "Stoppage Point";
+
+          if (idx === 0) {
+            markerIcon = locationMarkerIcon;
+            labelPrefix = "Start Location";
+          } else if (idx === routeLen - 1) {
+            markerIcon = locationMarkerIcon;
+            labelPrefix = "Destination (End)";
+          }
+
+          const wpMarker = L.marker([pt.lat, pt.lon], { icon: markerIcon }).addTo(map);
+          wpMarker.bindTooltip(`<b>${labelPrefix}</b><br>${pt.name}`, { direction: 'top' });
+          wpMarker.on('click', () => selectOrder(order.id));
+          waypointMarkers.push(wpMarker);
+        });
+
+        // Moving Vessel Marker
+        const initialPos = getInterpolatedPointAndBearing(order, order.completedDistKm);
+        const marker = L.marker([initialPos.lat, initialPos.lon], {
+          icon: createVesselIcon(order.type, initialPos.bearing)
+        }).addTo(map);
+
+        marker.bindTooltip(`<b>${order.id}</b><br>${order.name}`, { permanent: false, direction: 'top' });
+        marker.on('click', () => selectOrder(order.id));
+
+        orderLayers[order.id] = {
+          polyline: polyline,
+          decorator: decorator,
+          marker: marker,
+          waypoints: waypointMarkers
+        };
+      });
+    }
+
+    // FOSS RainViewer API Real-Time Radar Integration
+    async function initRainViewerRadar() {
+      try {
+        const response = await fetch('https://api.rainviewer.com/public/weather-maps.json');
+        const data = await response.json();
+        if (data && data.radar && data.radar.past && data.radar.past.length > 0) {
+          const latestRadar = data.radar.past[data.radar.past.length - 1];
+          const radarTileUrl = `${data.host}${latestRadar.path}/256/{z}/{x}/{y}/2/1_1.png`;
+          
+          const radarLayer = L.tileLayer(radarTileUrl, {
+            opacity: 0.75,
+            attribution: 'Live Weather Radar &copy; <a href="https://www.rainviewer.com/" target="_blank">RainViewer</a>'
+          });
+
+          mapLayersControl.addOverlay(radarLayer, "Live Storm Radar (RainViewer)");
+          radarLayer.addTo(map);
+        }
+      } catch (err) {
+        console.warn("RainViewer radar overlay initialization skipped:", err);
+      }
+    }
+
+    // Weather Heatmap Layer Initialization
+    async function initLiveWeatherHeatmap() {
+      const heatPoints = [];
+      
+      // Dense sampling across Antarctic & Southern Ocean logistics corridors
+      const keyRoutePoints = [
+        [-33.91, 18.42], [-40.2, 25.4], [-46.50, 32.10], [-51.2, 41.5], [-56.20, 51.50], 
+        [-60.5, 60.1], [-64.10, 68.30], [-67.2, 72.5], [-69.40, 76.18], [-42.1, 16.5], 
+        [-51.50, 15.20], [-61.0, 13.8], [-68.2, 12.1], [-70.82, 11.64], [-70.76, 11.73], 
+        [-10.0, 68.0], [-20.16, 57.50], [-35.0, 48.0], [-48.00, 42.00], [-58.0, 28.0], 
+        [-68.50, 12.00], [-73.50, 14.80], [-75.10, 18.20], [-66.0, 70.0], [-68.0, 75.0]
+      ];
+
+      // Generate continuous atmospheric wind/storm intensity points along Antarctic storm belts
+      for (const [lat, lon] of keyRoutePoints) {
+        let intensity = 0.5;
+        
+        // Fetch real Open-Meteo current wind speed where available
+        const wx = await fetchOpenMeteoWeather(lat, lon);
+        if (wx && wx.wind_speed_10m !== undefined) {
+          intensity = Math.min(1.0, Math.max(0.3, wx.wind_speed_10m / 55.0));
+        } else {
+          // Fallback based on latitude storm belts (Roaring 40s & Furious 50s high wind intensity)
+          const absLat = Math.abs(lat);
+          if (absLat >= 40 && absLat <= 65) intensity = 0.85;
+          else if (absLat > 65) intensity = 0.65;
+          else intensity = 0.4;
+        }
+
+        // Add primary point and small cluster around it for solid visual intensity
+        heatPoints.push([lat, lon, intensity]);
+        heatPoints.push([lat + 0.8, lon + 1.2, intensity * 0.9]);
+        heatPoints.push([lat - 0.8, lon - 1.2, intensity * 0.85]);
+      }
+
+      if (heatPoints.length > 0 && typeof L.heatLayer === 'function') {
+        weatherHeatLayer = L.heatLayer(heatPoints, {
+          radius: 65,
+          blur: 30,
+          maxZoom: 10,
+          max: 1.0,
+          minOpacity: 0.45,
+          gradient: {
+            0.2: '#0000ff',
+            0.4: '#00ffff',
+            0.6: '#00ff00',
+            0.8: '#ffff00',
+            1.0: '#ff0000'
+          }
+        });
+
+        mapLayersControl.addOverlay(weatherHeatLayer, "Live Wind & Storm Heatmap (Open-Meteo)");
+        weatherHeatLayer.addTo(map);
+      }
+    }
+
+    // Continuous Real-Time Global Movement Engine
+    function startGlobalLiveSimulation() {
+      function animStep(timestamp) {
+        if (!lastAnimTimestamp) lastAnimTimestamp = timestamp;
+        const dt = Math.min((timestamp - lastAnimTimestamp) / 1000, 0.1); 
+        lastAnimTimestamp = timestamp;
+
+        if (isSimulationRunning) {
+          ordersData.forEach(order => {
+            if (order.status === 'In Progress') {
+              let simSpeedKmPerSec = 5; 
+              if (order.type === 'Plane') simSpeedKmPerSec = 15; 
+              else if (order.type === 'Train') simSpeedKmPerSec = 10; 
+
+              order.completedDistKm += simSpeedKmPerSec * dt;
+
+              if (order.completedDistKm >= order.computedTotalKm) {
+                order.completedDistKm = order.computedTotalKm;
+                order.status = 'Reached'; 
+                updateOrderCardBadge(order);
+                initDashboardStats();
+              }
+
+              const posInfo = getInterpolatedPointAndBearing(order, order.completedDistKm);
+              const layer = orderLayers[order.id];
+              if (layer && layer.marker) {
+                layer.marker.setLatLng([posInfo.lat, posInfo.lon]);
+                layer.marker.setIcon(createVesselIcon(order.type, posInfo.bearing));
+              }
+
+              if (selectedOrderId === order.id) {
+                updateUIProgressMetrics(order, order.completedDistKm);
+                
+                if (lastWeatherUpdateKm < 0 || Math.abs(order.completedDistKm - lastWeatherUpdateKm) > 1500) {
+                  lastWeatherUpdateKm = order.completedDistKm;
+                  updateWeatherPanel(posInfo.lat, posInfo.lon);
+                }
+              }
+            }
+          });
+        }
+
+        requestAnimationFrame(animStep);
+      }
+      requestAnimationFrame(animStep);
+    }
+
+    function toggleSimulation() {
+      isSimulationRunning = !isSimulationRunning;
+      const btn = document.getElementById('btn-toggle-sim');
+      btn.innerText = isSimulationRunning ? "Pause Live Simulation" : "Resume Live Simulation";
+      btn.style.backgroundColor = isSimulationRunning ? "#0f172a" : "#2563eb";
+    }
+
+    async function selectOrder(id) {
+      selectedOrderId = id;
+      lastWeatherUpdateKm = -1;
+
+      document.querySelectorAll('.order-card').forEach(c => c.classList.remove('active'));
+      const activeCard = document.getElementById(`order-card-${id}`);
+      if (activeCard) activeCard.classList.add('active');
+
+      const order = ordersData.find(o => o.id === id);
+      if (!order) return;
+
+      // Filter Map: Show selected vessel path and associated waypoint location markers
+      Object.keys(orderLayers).forEach(orderId => {
+        const l = orderLayers[orderId];
+        const isSelected = (orderId === id);
+
+        if (isSelected) {
+          if (!map.hasLayer(l.polyline)) map.addLayer(l.polyline);
+          if (l.decorator && !map.hasLayer(l.decorator)) map.addLayer(l.decorator);
+          if (!map.hasLayer(l.marker)) map.addLayer(l.marker);
+          if (l.waypoints) l.waypoints.forEach(wp => { if (!map.hasLayer(wp)) map.addLayer(wp); });
+        } else {
+          if (map.hasLayer(l.polyline)) map.removeLayer(l.polyline);
+          if (l.decorator && map.hasLayer(l.decorator)) map.removeLayer(l.decorator);
+          if (map.hasLayer(l.marker)) map.removeLayer(l.marker);
+          if (l.waypoints) l.waypoints.forEach(wp => { if (map.hasLayer(wp)) map.removeLayer(wp); });
+        }
+      });
+
+      // Show Details Sidebar
+      const detailsPanel = document.getElementById('details-panel');
+      detailsPanel.style.display = 'flex';
+      map.invalidateSize();
+
+      document.getElementById('det-title').innerText = `${order.id}`;
+      document.getElementById('det-type').innerText = order.type;
+      document.getElementById('det-model').innerText = order.model;
+      document.getElementById('det-vessel-name').innerText = order.name;
+      document.getElementById('det-captain').innerText = order.captain;
+
+      document.getElementById('det-mass').innerText = `${order.cargoMassTons} Tons`;
+      document.getElementById('det-volume').innerText = `${order.cargoVolumeM3} m³`;
+      document.getElementById('det-speed').innerText = `${order.speedKnots} Knots`;
+
+      updateUIProgressMetrics(order, order.completedDistKm);
+
+      document.getElementById('det-delay').innerText = `+${order.delayHours} Hours`;
+      document.getElementById('det-delay-reason').innerText = order.delayReason;
+
+      const routeTable = document.getElementById('route-table-body');
+      routeTable.innerHTML = '';
+      order.route.forEach((pt, idx) => {
+        const tr = document.createElement('tr');
+        const tag = idx === 0 ? " (Start)" : (idx === order.route.length - 1 ? " (End)" : " (Stoppage)");
+        tr.innerHTML = `
+          <td>${idx + 1}. ${pt.name}${tag}</td>
+          <td>${pt.lat.toFixed(2)}°, ${pt.lon.toFixed(2)}°</td>
+        `;
+        routeTable.appendChild(tr);
+      });
+
+      const activeLayer = orderLayers[id];
+      if (activeLayer && activeLayer.polyline) {
+        map.fitBounds(activeLayer.polyline.getBounds(), { padding: [50, 50] });
+      }
+
+      const currentPos = getInterpolatedPointAndBearing(order, order.completedDistKm);
+      await updateWeatherPanel(currentPos.lat, currentPos.lon);
+    }
+
+    function updateUIProgressMetrics(order, currentKm) {
+      const distRem = Math.max(0, Math.round(order.computedTotalKm - currentKm));
+      document.getElementById('det-dist-rem').innerText = order.status === 'Reached' ? '0 km (Reached)' : `${distRem} km`;
+
+      const progressPct = Math.min(100, Math.round((currentKm / order.computedTotalKm) * 100));
+      document.getElementById('det-progress-text').innerText = `${progressPct}%`;
+      document.getElementById('det-progress-bar').style.width = `${progressPct}%`;
+    }
+
+    async function fetchOpenMeteoWeather(lat, lon) {
+      const cached = getCachedWeatherData(lat, lon);
+      if (cached) return cached;
+
+      try {
+        const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat.toFixed(4)}&longitude=${lon.toFixed(4)}&current=temperature_2m,wind_speed_10m,wind_direction_10m,weather_code`;
+        const res = await fetch(url);
+        const data = await res.json();
+
+        if (data && data.current) {
+          setCachedWeatherData(lat, lon, data.current);
+          return data.current;
+        }
+      } catch (e) {
+        console.warn("Open-Meteo fetch error:", e);
+      }
+      return null;
+    }
+
+    async function updateWeatherPanel(lat, lon) {
+      document.getElementById('wx-status').innerText = "Fetching live/cached data...";
+      document.getElementById('wx-temp').innerText = "-";
+      document.getElementById('wx-wind').innerText = "-";
+      document.getElementById('wx-dir').innerText = "-";
+
+      const c = await fetchOpenMeteoWeather(lat, lon);
+      if (c) {
+        document.getElementById('wx-status').innerText = decodeWmoCode(c.weather_code);
+        document.getElementById('wx-temp').innerText = `${c.temperature_2m} °C`;
+        document.getElementById('wx-wind').innerText = `${c.wind_speed_10m} km/h`;
+        document.getElementById('wx-dir').innerText = `${c.wind_direction_10m}° (${degreesToCardinal(c.wind_direction_10m)})`;
+      } else {
+        document.getElementById('wx-status').innerText = "Weather unavailable";
+      }
+    }
+
+    function decodeWmoCode(code) {
+      if (code === 0) return "Clear Sky";
+      if (code >= 1 && code <= 3) return "Partly Cloudy";
+      if (code === 45 || code === 48) return "Fog / Ice Mist";
+      if (code >= 51 && code <= 67) return "Rain / Drizzle";
+      if (code >= 71 && code <= 77) return "Snowfall / Ice Pellets";
+      if (code >= 80 && code <= 82) return "Rain Showers";
+      if (code >= 85 && code <= 86) return "Heavy Snow Showers";
+      if (code >= 95) return "Antarctic Storm";
+      return "Overcast";
+    }
+
+    function degreesToCardinal(deg) {
+      const dirs = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+      return dirs[Math.round(deg / 45) % 8];
+    }
+
+    function resetMapView() {
+      document.getElementById('details-panel').style.display = 'none';
+      document.querySelectorAll('.order-card').forEach(c => c.classList.remove('active'));
+      selectedOrderId = null;
+
+      // Re-enable visibility of all active vessel markers, waypoints & polylines
+      Object.keys(orderLayers).forEach(orderId => {
+        const l = orderLayers[orderId];
+        if (!map.hasLayer(l.polyline)) map.addLayer(l.polyline);
+        if (l.decorator && !map.hasLayer(l.decorator)) map.addLayer(l.decorator);
+        if (!map.hasLayer(l.marker)) map.addLayer(l.marker);
+        if (l.waypoints) l.waypoints.forEach(wp => { if (!map.hasLayer(wp)) map.addLayer(wp); });
+      });
+
+      map.invalidateSize();
+      map.setView([-48.0, 40.0], 3);
+    }
+  </script>
+</body>
+</html>
