@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>dolphin - Antarctic Cargo Operations</title>
+  <title>Dolphin - Cargo</title>
   
   <link rel="icon" type="image/png" href="/images/cargo-favicon.png">
   <!-- Leaflet CSS -->
@@ -30,7 +30,7 @@
     header {
       height: 48px;
       background-color: #ffffff;
-      border-bottom: 1px solid #cbd5e1;
+      border: 1px solid #cbd5e1;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -42,6 +42,12 @@
       display: flex;
       align-items: center;
       gap: 16px;
+    }
+
+    .header-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
 
     .back-btn {
@@ -76,7 +82,7 @@
     .sim-toggle-btn {
       background-color: #0f172a;
       color: #ffffff;
-      border: none;
+      border: 1px solid #0f172a;
       padding: 6px 14px;
       font-size: 12px;
       font-weight: 600;
@@ -88,19 +94,35 @@
       background-color: #334155;
     }
 
+    .sim-speed-btn {
+      background-color: #334155;
+      color: #ffffff;
+      border: 1px solid #334155;
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .sim-speed-btn:hover {
+      background-color: #475569;
+    }
+
     /* 3-Column Layout */
     .app-body {
       display: flex;
       flex: 1;
       height: calc(100vh - 48px);
       overflow: hidden;
+      position: relative;
     }
 
     /* Left Sidebar Panel */
     .sidebar-left {
       width: 330px;
       background-color: #ffffff;
-      border-right: 1px solid #cbd5e1;
+      border: 1px solid #cbd5e1;
       display: flex;
       flex-direction: column;
       flex-shrink: 0;
@@ -110,7 +132,7 @@
     /* Metrics Dashboard */
     .stats-grid {
       padding: 12px;
-      border-bottom: 1px solid #cbd5e1;
+      border: 1px solid #cbd5e1;
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 8px;
@@ -139,16 +161,64 @@
       margin-top: 2px;
     }
 
-    /* Orders Section */
+    /* Orders Section & Filters */
     .orders-header {
-      padding: 10px 12px;
+      padding: 10px 12px 6px 12px;
       font-size: 11px;
       font-weight: 700;
       color: #475569;
-      border-bottom: 1px solid #e2e8f0;
       text-transform: uppercase;
       letter-spacing: 0.5px;
       background-color: #ffffff;
+    }
+
+    .search-filter-box {
+      padding: 0 12px 10px 12px;
+      border: 1px solid #e2e8f0;
+      background-color: #ffffff;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 6px 10px;
+      font-size: 12px;
+      border: 1px solid #cbd5e1;
+      border-radius: 4px;
+      outline: none;
+      margin-bottom: 6px;
+    }
+
+    .search-input:focus {
+      border-color: #2563eb;
+    }
+
+    .filter-pills {
+      display: flex;
+      gap: 4px;
+      overflow-x: auto;
+    }
+
+    .filter-pill {
+      font-size: 10px;
+      padding: 3px 8px;
+      border-radius: 12px;
+      border: 1px solid #cbd5e1;
+      background: #f8fafc;
+      color: #475569;
+      cursor: pointer;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .filter-pill.active {
+      background: #0f172a;
+      color: #ffffff;
+      border-color: #0f172a;
+    }
+
+    .filter-pill.emergency-pill.active {
+      background: #dc2626;
+      border-color: #dc2626;
     }
 
     .orders-list {
@@ -175,6 +245,11 @@
     .order-card.active {
       border: 2px solid #2563eb;
       background-color: #eff6ff;
+    }
+
+    .order-card.emergency-active {
+      border: 2px solid #dc2626 !important;
+      background-color: #fef2f2 !important;
     }
 
     .order-id-line {
@@ -210,6 +285,13 @@
     .badge-in-progress { background-color: #dbeafe; color: #1e40af; }
     .badge-reached { background-color: #dcfce7; color: #166534; }
     .badge-disrupted { background-color: #fee2e2; color: #991b1b; }
+    .badge-emergency { background-color: #dc2626; color: #ffffff; animation: pulse-badge 1.2s infinite; }
+
+    @keyframes pulse-badge {
+      0% { opacity: 1; }
+      50% { opacity: 0.5; }
+      100% { opacity: 1; }
+    }
 
     /* Map Center Area */
     .map-container {
@@ -245,9 +327,9 @@
 
     /* Right Details Panel */
     .sidebar-right {
-      width: 360px;
+      width: 380px;
       background-color: #ffffff;
-      border-left: 1px solid #cbd5e1;
+      border: 1px solid #cbd5e1;
       display: none;
       flex-direction: column;
       flex-shrink: 0;
@@ -260,9 +342,11 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      border-bottom: 1px solid #e2e8f0;
-      padding-bottom: 8px;
+      border: 1px solid #e2e8f0;
+      padding: 8px 10px;
+      border-radius: 4px;
       margin-bottom: 12px;
+      background-color: #f8fafc;
     }
 
     .details-title {
@@ -283,6 +367,43 @@
 
     .close-btn:hover {
       background-color: #f1f5f9;
+    }
+
+    /* Emergency Response Card in Sidebar */
+    .sos-box {
+      background-color: #fef2f2;
+      border: 1px solid #fca5a5;
+      padding: 10px;
+      border-radius: 4px;
+      margin-bottom: 12px;
+      display: none;
+    }
+
+    .sos-box.active {
+      display: block;
+    }
+
+    .sos-header {
+      font-size: 12px;
+      font-weight: 700;
+      color: #991b1b;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
+
+    .sos-desc {
+      font-size: 11px;
+      color: #7f1d1d;
+      margin-bottom: 8px;
+      line-height: 1.3;
+    }
+
+    .sos-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
     }
 
     .section-label {
@@ -376,13 +497,14 @@
       width: 100%;
       background-color: #2563eb;
       color: #ffffff;
-      border: none;
+      border: 1px solid #2563eb;
       padding: 8px;
       font-weight: 600;
       font-size: 12px;
       border-radius: 4px;
       cursor: pointer;
-      margin-top: 10px;
+      margin-top: 6px;
+      transition: background 0.15s ease;
     }
 
     .action-btn:hover {
@@ -393,11 +515,129 @@
       background-color: #ffffff;
       color: #0f172a;
       border: 1px solid #cbd5e1;
-      margin-top: 6px;
     }
 
     .btn-secondary:hover {
       background-color: #f8fafc;
+    }
+
+    .btn-danger {
+      background-color: #dc2626;
+      border-color: #dc2626;
+      color: #ffffff;
+    }
+
+    .btn-danger:hover {
+      background-color: #b91c1c;
+    }
+
+    .btn-warning {
+      background-color: #d97706;
+      border-color: #d97706;
+      color: #ffffff;
+    }
+
+    .btn-warning:hover {
+      background-color: #b45309;
+    }
+
+    .btn-defence {
+      background-color: #1e3a8a;
+      border-color: #1e3a8a;
+      color: #ffffff;
+    }
+
+    .btn-defence:hover {
+      background-color: #1e40af;
+    }
+
+    .btn-toggle-active {
+      background-color: #0f172a !important;
+      color: #ffffff !important;
+    }
+
+    /* Messaging & Comms Terminal */
+    .comms-box {
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-radius: 4px;
+      padding: 8px;
+      margin-top: 6px;
+    }
+
+    .comms-log {
+      height: 130px;
+      overflow-y: auto;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 3px;
+      padding: 6px;
+      font-size: 11px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 6px;
+    }
+
+    .msg-bubble {
+      padding: 5px 8px;
+      border-radius: 4px;
+      max-width: 90%;
+      line-height: 1.3;
+      border: 1px solid #e2e8f0;
+    }
+
+    .msg-out {
+      align-self: flex-end;
+      background-color: #eff6ff;
+      border-color: #bfdbfe;
+      color: #1e3a8a;
+    }
+
+    .msg-in {
+      align-self: flex-start;
+      background-color: #f1f5f9;
+      border-color: #cbd5e1;
+      color: #0f172a;
+    }
+
+    .msg-defence {
+      align-self: flex-start;
+      background-color: #fef3c7;
+      border-color: #fde68a;
+      color: #78350f;
+    }
+
+    .msg-meta {
+      font-size: 9px;
+      color: #64748b;
+      margin-bottom: 2px;
+      font-weight: 700;
+    }
+
+    .comms-input-row {
+      display: flex;
+      gap: 6px;
+    }
+
+    /* Floating Toast Alert Notification */
+    .toast-alert {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #0f172a;
+      color: #ffffff;
+      padding: 10px 16px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      z-index: 1000;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+      display: none;
+      align-items: center;
+      gap: 10px;
+      border: 2px solid #dc2626;
     }
   </style>
 </head>
@@ -407,9 +647,12 @@
   <header>
     <div class="header-left">
       <a href="index.html" class="back-btn">&larr; Back</a>
-      <div class="brand">dolphin <span class="brand-subtitle">Antarctic Cargo Logistics</span></div>
+      <div class="brand">Dolphin <span class="brand-subtitle"></span></div>
     </div>
-    <button class="sim-toggle-btn" id="btn-toggle-sim" onclick="toggleSimulation()">Pause Live Simulation</button>
+    <div class="header-controls">
+      <button class="sim-speed-btn" id="btn-speed-sim" onclick="cycleSimSpeed()">Speed: 1x</button>
+      <button class="sim-toggle-btn" id="btn-toggle-sim" onclick="toggleSimulation()">Pause Live Simulation</button>
+    </div>
   </header>
 
   <!-- Application Layout -->
@@ -425,7 +668,7 @@
           <div class="stat-value" id="stat-in-progress">0</div>
         </div>
         <div class="stat-card">
-          <div class="stat-label">Disrupted</div>
+          <div class="stat-label">Disrupted / SOS</div>
           <div class="stat-value" id="stat-disrupted">0</div>
         </div>
         <div class="stat-card">
@@ -438,14 +681,29 @@
         </div>
       </div>
 
-      <!-- Orders List -->
+      <!-- Orders Header & Search/Filter Controls -->
       <div class="orders-header">Active & Completed Shipments</div>
+      <div class="search-filter-box">
+        <input type="text" id="order-search-input" class="search-input" placeholder="Search ID, Vessel, Station..." oninput="handleSearchFilterChange()" />
+        <div class="filter-pills">
+          <button class="filter-pill active" onclick="setFilterStatus('ALL', this)">All</button>
+          <button class="filter-pill" onclick="setFilterStatus('In Progress', this)">In Progress</button>
+          <button class="filter-pill emergency-pill" onclick="setFilterStatus('EMERGENCY', this)">SOS Alert</button>
+          <button class="filter-pill" onclick="setFilterStatus('Disrupted', this)">Disrupted</button>
+          <button class="filter-pill" onclick="setFilterStatus('Reached', this)">Reached</button>
+        </div>
+      </div>
+
+      <!-- Orders List -->
       <div class="orders-list" id="orders-list"></div>
     </div>
 
     <!-- Map Viewport -->
     <div class="map-container">
       <div id="map"></div>
+      <div class="toast-alert" id="toast-alert">
+        <span id="toast-text">Dispatch alert triggered</span>
+      </div>
     </div>
 
     <!-- Right Side Details Panel -->
@@ -453,6 +711,19 @@
       <div class="details-title-row">
         <div class="details-title" id="det-title">Order Details</div>
         <button class="close-btn" onclick="resetMapView()">Close</button>
+      </div>
+
+      <!-- Emergency SOS Active Box -->
+      <div class="sos-box" id="sos-box">
+        <div class="sos-header">
+          <span>🚨 EMERGENCY SOS ACTIVE</span>
+        </div>
+        <div class="sos-desc" id="sos-desc">Distress protocol triggered. Immediate dispatch intervention recommended.</div>
+        <div class="sos-actions">
+          <button class="action-btn btn-defence" onclick="requestDefenceCoastGuardSupport()">Seek Defence / Coast Guard Assistance</button>
+          <button class="action-btn btn-warning" onclick="dispatchNearestSupport()">Dispatch Support Unit</button>
+          <button class="action-btn btn-secondary" id="btn-alternate-route" onclick="rerouteToSafeHaven()">Calculate & Execute Alternate Route</button>
+        </div>
       </div>
 
       <div class="section-label">Vessel & Command</div>
@@ -475,7 +746,18 @@
         </div>
       </div>
 
-      <div class="section-label">Payload & Physics</div>
+      <!-- Messaging & Direct Radio Terminal -->
+      <div class="section-label">Direct VHF / Satellite Radio Comms</div>
+      <div class="comms-box">
+        <div class="comms-log" id="comms-log-box"></div>
+        <div class="comms-input-row">
+          <input type="text" id="comms-text-input" class="search-input" style="margin-bottom:0;" placeholder="Type broadcast message..." onkeypress="if(event.key==='Enter') sendCommsMessage()" />
+          <button class="action-btn" style="width: 75px; margin-top:0;" onclick="sendCommsMessage()">Send</button>
+        </div>
+      </div>
+
+      <!-- Cargo Manifest & Specification Section -->
+      <div class="section-label">Cargo Manifest & Specs</div>
       <div class="metrics-grid">
         <div class="metric-box">
           <div class="metric-lbl">Cargo Mass</div>
@@ -486,12 +768,48 @@
           <div class="metric-val" id="det-volume">-</div>
         </div>
         <div class="metric-box">
+          <div class="metric-lbl">Cargo Category</div>
+          <div class="metric-val" id="det-cargo-category">-</div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-lbl">Storage / Temp</div>
+          <div class="metric-val" id="det-cargo-temp">-</div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-lbl">Hazmat Rating</div>
+          <div class="metric-val" id="det-cargo-hazmat">-</div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-lbl">Packaging Units</div>
+          <div class="metric-val" id="det-cargo-units">-</div>
+        </div>
+      </div>
+
+      <div class="section-label">Itemized Cargo Manifest</div>
+      <table class="table-route">
+        <thead>
+          <tr>
+            <th>Cargo Description</th>
+            <th>Qty</th>
+            <th>Weight</th>
+          </tr>
+        </thead>
+        <tbody id="cargo-table-body"></tbody>
+      </table>
+
+      <div class="section-label">Navigation & Transit Speed</div>
+      <div class="metrics-grid">
+        <div class="metric-box">
           <div class="metric-lbl">Current Speed</div>
           <div class="metric-val" id="det-speed">-</div>
         </div>
         <div class="metric-box">
           <div class="metric-lbl">Distance Left</div>
           <div class="metric-val" id="det-dist-rem">-</div>
+        </div>
+        <div class="metric-box" style="grid-column: span 2;">
+          <div class="metric-lbl">Estimated Transit Time (ETA)</div>
+          <div class="metric-val" id="det-eta" style="color: #2563eb;">-</div>
         </div>
       </div>
 
@@ -537,6 +855,10 @@
         <tbody id="route-table-body"></tbody>
       </table>
 
+      <!-- Emergency Response Action Buttons -->
+      <button class="action-btn btn-danger" id="btn-toggle-sos" onclick="toggleEmergencySOS()">Declare Emergency SOS</button>
+      <button class="action-btn btn-secondary" id="btn-follow-vessel" onclick="toggleFollowVessel()">Lock Camera on Vessel</button>
+      <button class="action-btn btn-secondary" onclick="exportOrderCSV()">Export Route Log & Cargo Manifest (CSV)</button>
       <button class="action-btn btn-secondary" onclick="resetMapView()">Show All Vessels</button>
     </div>
 
@@ -548,7 +870,33 @@
   <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
 
   <script>
-    // Indian Antarctic Expedition Fleet Logistics Data
+    // Nearby Defence & Coast Guard Assets Data (Antarctic & Arctic Polar Stations)
+    const defenceAssets = [
+      { id: "DEF-01", name: "INS Vikrant Naval Taskforce", type: "Naval Defence Ship", lat: -54.2000, lon: 38.5000, callsign: "NAVY-ALPHA" },
+      { id: "DEF-02", name: "Indian Coast Guard OPV Samudra", type: "Coast Guard Vessel", lat: -62.8000, lon: 58.2000, callsign: "CG-RESCUE-1" },
+      { id: "DEF-03", name: "US Coast Guard Polar Icebreaker", type: "Coast Guard Icebreaker", lat: -67.1000, lon: 68.9000, callsign: "USCG-POLAR" },
+      { id: "DEF-04", name: "Chilean Coast Guard Base Station", type: "Defence Base Station", lat: -62.2010, lon: -58.9620, callsign: "DEF-BASE-SOUTH" },
+      { id: "DEF-05", name: "KV Svalbard Coast Guard Icebreaker", type: "Arctic Coast Guard", lat: 78.2200, lon: 15.6300, callsign: "NOR-COAST-1" },
+      { id: "DEF-06", name: "Arctic Maritime Security Patrol", type: "Naval Patrol Vessel", lat: 74.5000, lon: 19.0000, callsign: "ARCTIC-GUARD" }
+    ];
+
+    // Alternate Emergency Routes Configuration
+    const alternateRoutesConfig = {
+      "IND-ANT-2026-03": [
+        { name: "Current Position Detour", lat: -68.5000, lon: 12.0000 },
+        { name: "Coast Guard Escort Channel", lat: -69.1000, lon: 15.5000 },
+        { name: "Safe Ice Harbor Anchorage", lat: -70.1000, lon: 13.8000 },
+        { name: "Maitri Station Safe Route (End)", lat: -70.7658, lon: 11.7358 }
+      ],
+      "IND-HIM-2026-03": [
+        { name: "Current Position Detour", lat: 75.5000, lon: 16.0000 },
+        { name: "Svalbard Fjord Safe Channel", lat: 77.2000, lon: 14.5000 },
+        { name: "Kings Bay Anchorage", lat: 78.8500, lon: 12.1000 },
+        { name: "Himadri Station Safe Haven (End)", lat: 78.9244, lon: 11.9286 }
+      ]
+    };
+
+    // Polar Expedition Fleet Logistics Data with Cargo Manifest Details (Antarctica & Himadri Arctic Base)
     const ordersData = [
       {
         id: "IND-ANT-2026-01",
@@ -558,16 +906,30 @@
         station: "Bharathi",
         type: "Ship",
         status: "In Progress",
+        isEmergency: false,
         model: "Ice-Strengthened Polar Cargo Ship",
         name: "PRV Sagar Nidhi",
         captain: "Capt. Eshaan",
         cargoMassTons: 420,
         cargoVolumeM3: 1100,
+        cargoCategory: "Heavy Machinery & Spares",
+        cargoTemp: "Ambient (-5°C to +10°C)",
+        hazmat: "Class 9 (Lithium Spares)",
+        cargoUnits: "14 TEU Containers",
+        cargoManifest: [
+          { item: "PistenBully Track Assemblies", qty: "4 Units", weight: "120 Tons" },
+          { item: "Station Power Generator Turbines", qty: "2 Units", weight: "180 Tons" },
+          { item: "HVAC Replacement Heat Exchangers", qty: "8 Pallets", weight: "40 Tons" },
+          { item: "Structural Steel Beams", qty: "25 Bundles", weight: "80 Tons" }
+        ],
         speedKnots: 12.5,
         totalDistKm: 8200,
         completedDistKm: 4200,
         delayHours: 18.5,
         delayReason: "High pack ice density near 64°S",
+        messages: [
+          { sender: "System", type: "in", text: "Radio telemetry connected to PRV Sagar Nidhi.", time: "10:00 AM" }
+        ],
         route: [
           { name: "Cape Town Port (Start)", lat: -33.9188, lon: 18.4233 },
           { name: "Roaring Forties Transit", lat: -46.5000, lon: 32.1000 },
@@ -584,16 +946,30 @@
         station: "Maitri",
         type: "Plane",
         status: "In Progress",
+        isEmergency: false,
         model: "Ilyushin Il-76 Heavy Transport",
         name: "IAF Polar Express",
         captain: "Capt. Manvitha",
         cargoMassTons: 18.5,
         cargoVolumeM3: 85,
+        cargoCategory: "Scientific & Provisions",
+        cargoTemp: "Cold Chain (+2°C to +8°C)",
+        hazmat: "Non-Hazardous",
+        cargoUnits: "8 Air Cargo Skids",
+        cargoManifest: [
+          { item: "Atmospheric Spectrometers", qty: "6 Crates", weight: "3.2 Tons" },
+          { item: "Fresh Produce & Rations", qty: "12 Pallets", weight: "8.5 Tons" },
+          { item: "Satellite Communication Relays", qty: "4 Packages", weight: "2.8 Tons" },
+          { item: "Sensor Li-Ion Battery Units", qty: "10 Cases", weight: "4.0 Tons" }
+        ],
         speedKnots: 360,
         totalDistKm: 4350,
         completedDistKm: 1200,
         delayHours: 0.0,
         delayReason: "Clear weather window",
+        messages: [
+          { sender: "IAF Flight Desk", type: "in", text: "Cruising at FL280. Airspace clear.", time: "11:15 AM" }
+        ],
         route: [
           { name: "Cape Town Airport (Start)", lat: -33.9715, lon: 18.6021 },
           { name: "South Atlantic Midpoint", lat: -51.5000, lon: 15.2000 },
@@ -609,16 +985,30 @@
         station: "Maitri",
         type: "Ship",
         status: "Disrupted",
+        isEmergency: true,
         model: "Heavy Icebreaker Cargo Vessel",
         name: "INS Sagar Samudra",
         captain: "Capt. Tanusha",
         cargoMassTons: 650,
         cargoVolumeM3: 1800,
+        cargoCategory: "Bulk Fuel & Infrastructure",
+        cargoTemp: "Thermal Tank Controlled",
+        hazmat: "Class 3 (Flammable Liquid)",
+        cargoUnits: "22 ISO Tankers & Containers",
+        cargoManifest: [
+          { item: "Special Antarctic Fuel (A-1 Grade)", qty: "400,000 Liters", weight: "340 Tons" },
+          { item: "Pre-fabricated Living Modules", qty: "6 Units", weight: "180 Tons" },
+          { item: "Heavy Duty Snow Blower Spares", qty: "12 Crates", weight: "130 Tons" }
+        ],
         speedKnots: 8.5,
         totalDistKm: 9800,
         completedDistKm: 6100,
         delayHours: 42.0,
-        delayReason: "Severe blizzard & thick fast ice",
+        delayReason: "Severe blizzard & thick fast ice collision hazard",
+        messages: [
+          { sender: "Capt. Tanusha", type: "in", text: "MAYDAY MAYDAY. Fast ice compression detected! Requesting Defence escort.", time: "12:05 PM" },
+          { sender: "Coast Guard HQ", type: "defence", text: "Distress beacon acknowledged. Coast Guard & Defence units notified.", time: "12:08 PM" }
+        ],
         route: [
           { name: "Mormugao Port, Goa (Start)", lat: 15.4094, lon: 73.7958 },
           { name: "Port Louis Waypoint", lat: -20.1609, lon: 57.5012 },
@@ -636,16 +1026,29 @@
         station: "Maitri Inland",
         type: "Train",
         status: "In Progress",
+        isEmergency: false,
         model: "Heavy Snow Crawler Train",
         name: "Antarctic Overland Express",
         captain: "Capt. Midhun",
         cargoMassTons: 120,
         cargoVolumeM3: 350,
+        cargoCategory: "Traverse Supplies & Fuel",
+        cargoTemp: "Ambient Heavy Sleds",
+        hazmat: "Class 3 (Aviation Fuel Bladders)",
+        cargoUnits: "6 Heavy Tow Sleds",
+        cargoManifest: [
+          { item: "Jet-A1 Flexible Fuel Bladders", qty: "8 Bladders", weight: "60 Tons" },
+          { item: "Inland Dome Shelter Module", qty: "2 Units", weight: "35 Tons" },
+          { item: "Field Survival Packs & Rations", qty: "15 Crates", weight: "25 Tons" }
+        ],
         speedKnots: 25,
         totalDistKm: 1800,
         completedDistKm: 300,
         delayHours: 4.0,
         delayReason: "Crevasse field detour navigation",
+        messages: [
+          { sender: "Overland Lead", type: "in", text: "Navigating crevasse bypass zone safely.", time: "09:30 AM" }
+        ],
         route: [
           { name: "Maitri Base Camp (Start)", lat: -70.7658, lon: 11.7358 },
           { name: "Watzmann Ridge Waypoint", lat: -71.3000, lon: 12.1000 },
@@ -661,16 +1064,29 @@
         station: "Maitri",
         type: "Plane",
         status: "In Progress",
+        isEmergency: false,
         model: "Polar Hercules Airlifter",
         name: "IAF Him Surya",
         captain: "Capt. Altamash",
         cargoMassTons: 12.0,
         cargoVolumeM3: 50,
+        cargoCategory: "Medical & Cryo Biological",
+        cargoTemp: "Ultra-Cold (-80°C Cryo)",
+        hazmat: "Class 9 (Dry Ice / Nitrogen)",
+        cargoUnits: "4 Aircraft Containers (LD3)",
+        cargoManifest: [
+          { item: "Cryogenic Ice Core Samples", qty: "8 Dewars", weight: "2.5 Tons" },
+          { item: "Emergency Surgical Equipment", qty: "6 Cases", weight: "1.8 Tons" },
+          { item: "Precision Scientific Optics", qty: "2 Crates", weight: "7.7 Tons" }
+        ],
         speedKnots: 310,
         totalDistKm: 4350,
         completedDistKm: 2800,
         delayHours: 3.5,
         delayReason: "High altitude jetstream turbulence",
+        messages: [
+          { sender: "Capt. Altamash", type: "in", text: "Cryo containers stable at -80°C.", time: "11:45 AM" }
+        ],
         route: [
           { name: "Cape Town Airport (Start)", lat: -33.9715, lon: 18.6021 },
           { name: "Sub-Antarctic Waypoint", lat: -52.8000, lon: 16.1000 },
@@ -686,16 +1102,29 @@
         station: "Bharathi",
         type: "Ship",
         status: "Reached",
+        isEmergency: false,
         model: "Naval Auxiliary Supply Vessel",
         name: "INS Sagar Dhwani",
         captain: "Capt. Rushil",
         cargoMassTons: 510,
         cargoVolumeM3: 1400,
+        cargoCategory: "Renewable Energy Systems",
+        cargoTemp: "Standard Dry Storage",
+        hazmat: "Class 9 (Inverters & Batteries)",
+        cargoUnits: "18 TEU Containers",
+        cargoManifest: [
+          { item: "Bifacial Solar Photovoltaic Panels", qty: "1,200 Panels", weight: "180 Tons" },
+          { item: "Wind Turbine Blades & Mounts", qty: "4 Sets", weight: "150 Tons" },
+          { item: "Industrial Energy Storage System (BESS)", qty: "4 Containers", weight: "180 Tons" }
+        ],
         speedKnots: 13.0,
         totalDistKm: 8200,
         completedDistKm: 8200,
         delayHours: 0.0,
         delayReason: "On-schedule delivery",
+        messages: [
+          { sender: "Port Master", type: "in", text: "Offloading complete at Bharathi Wharf.", time: "08:10 AM" }
+        ],
         route: [
           { name: "Mormugao Port, Goa (Start)", lat: 15.4094, lon: 73.7958 },
           { name: "Equator Crossing", lat: 0.0000, lon: 68.0000 },
@@ -703,37 +1132,162 @@
           { name: "Prydz Bay Entry", lat: -67.1000, lon: 74.5000 },
           { name: "Bharathi Station (End)", lat: -69.4078, lon: 76.1872 }
         ]
+      },
+      {
+        id: "IND-HIM-2026-01",
+        num: 7,
+        title: "Arctic Atmospheric Lab & Sensors",
+        address: "Himadri Research Station, Ny-Ålesund, Svalbard, Arctic (78°55'N, 11°56'E)",
+        station: "Himadri",
+        type: "Ship",
+        status: "In Progress",
+        isEmergency: false,
+        model: "Arctic Research Ice-Class Vessel",
+        name: "RV Kilo Moana Arctic",
+        captain: "Capt. Sai",
+        cargoMassTons: 280,
+        cargoVolumeM3: 750,
+        cargoCategory: "Atmospheric & Marine Sensors",
+        cargoTemp: "Controlled (+5°C)",
+        hazmat: "Non-Hazardous",
+        cargoUnits: "8 ISO Containers",
+        cargoManifest: [
+          { item: "LIDAR Atmospheric Profilers", qty: "3 Units", weight: "25 Tons" },
+          { item: "Glaciology Ice Coring Rigs", qty: "2 Sets", weight: "45 Tons" },
+          { item: "Station Heating Fuel", qty: "120,000 L", weight: "110 Tons" },
+          { item: "Modular Lab Extensions", qty: "4 Units", weight: "100 Tons" }
+        ],
+        speedKnots: 14.0,
+        totalDistKm: 3200,
+        completedDistKm: 1800,
+        delayHours: 0.0,
+        delayReason: "On-schedule transit through Barents Sea",
+        messages: [
+          { sender: "Himadri Radio", type: "in", text: "Kings Bay weather calm. Dock facility ready.", time: "01:30 PM" }
+        ],
+        route: [
+          { name: "Tromsø Port (Start)", lat: 69.6492, lon: 18.9553 },
+          { name: "Bear Island Waypoint", lat: 74.4400, lon: 19.0500 },
+          { name: "South Cape Svalbard", lat: 76.5000, lon: 16.5000 },
+          { name: "Isfjorden Approach", lat: 78.1000, lon: 13.5000 },
+          { name: "Himadri Research Station (End)", lat: 78.9244, lon: 11.9286 }
+        ]
+      },
+      {
+        id: "IND-HIM-2026-02",
+        num: 8,
+        title: "Arctic Biological Samples & Satellite Gear",
+        address: "Himadri Research Station Airfield, Svalbard (78°55'N, 11°56'E)",
+        station: "Himadri",
+        type: "Plane",
+        status: "Reached",
+        isEmergency: false,
+        model: "Polar Twin Otter Sky Courier",
+        name: "Himadri Airborne-1",
+        captain: "Capt. Ishitha",
+        cargoMassTons: 4.5,
+        cargoVolumeM3: 22,
+        cargoCategory: "Cryo Samples & Electronics",
+        cargoTemp: "Ultra-Cold (-20°C)",
+        hazmat: "Class 9 (Lithium Instrument Packs)",
+        cargoUnits: "3 Air Cargo Crates",
+        cargoManifest: [
+          { item: "Permafrost Core Cryo Boxes", qty: "10 Cases", weight: "1.2 Tons" },
+          { item: "Satellite Ground Link Transceivers", qty: "2 Packs", weight: "0.8 Tons" },
+          { item: "Biological Reagents & Kits", qty: "5 Crates", weight: "2.5 Tons" }
+        ],
+        speedKnots: 180,
+        totalDistKm: 250,
+        completedDistKm: 250,
+        delayHours: 0.0,
+        delayReason: "Landed safely at Ny-Ålesund airstrip",
+        messages: [
+          { sender: "Airstrip Tower", type: "in", text: "Touchdown confirmed at Ny-Ålesund.", time: "09:40 AM" }
+        ],
+        route: [
+          { name: "Longyearbyen Airport (Start)", lat: 78.2461, lon: 15.4656 },
+          { name: "Forlandsundet Passage", lat: 78.6000, lon: 12.8000 },
+          { name: "Himadri Research Station (End)", lat: 78.9244, lon: 11.9286 }
+        ]
+      },
+      {
+        id: "IND-HIM-2026-03",
+        num: 9,
+        title: "Winter Generator Fuel & Structural Upgrades",
+        address: "Himadri Research Station, Kongsfjorden, Svalbard",
+        station: "Himadri",
+        type: "Ship",
+        status: "Disrupted",
+        isEmergency: true,
+        model: "Polar Heavy Supply Vessel",
+        name: "RV Himadri Express",
+        captain: "Capt. Krish",
+        cargoMassTons: 410,
+        cargoVolumeM3: 980,
+        cargoCategory: "Polar Fuel & Infrastructure",
+        cargoTemp: "Ambient Heavy Sleds",
+        hazmat: "Class 3 (Flammable Marine Diesel)",
+        cargoUnits: "12 ISO Tanks & Shelters",
+        cargoManifest: [
+          { item: "Low-Temp Diesel Supply", qty: "250,000 L", weight: "210 Tons" },
+          { item: "Insulated Living Enclosures", qty: "4 Modules", weight: "120 Tons" },
+          { item: "Turbine Engine Spare Kits", qty: "6 Crates", weight: "80 Tons" }
+        ],
+        speedKnots: 11.0,
+        totalDistKm: 2800,
+        completedDistKm: 1950,
+        delayHours: 28.0,
+        delayReason: "Heavy drift ice jam in Svalbard fjord approach",
+        messages: [
+          { sender: "Capt. Reyansh", type: "in", text: "Drift ice blocking Kings Bay entrance. Requesting Arctic Coast Guard escort.", time: "02:15 PM" },
+          { sender: "Svalbard Patrol", type: "defence", text: "KV Svalbard dispatch standing by. Alternate routing standby.", time: "02:20 PM" }
+        ],
+        route: [
+          { name: "Bergen Port, Norway (Start)", lat: 60.3929, lon: 5.3242 },
+          { name: "Norwegian Sea Crossing", lat: 68.0000, lon: 10.0000 },
+          { name: "Bear Island Passage", lat: 74.5000, lon: 18.5000 },
+          { name: "Svalbard Ice Margin", lat: 77.5000, lon: 15.0000 },
+          { name: "Himadri Research Station (End)", lat: 78.9244, lon: 11.9286 }
+        ]
       }
     ];
 
     let map;
     let mapLayersControl;
     let orderLayers = {};
+    let defenceMarkers = [];
     let selectedOrderId = null;
     let weatherHeatLayer = null;
     
     // Live Simulation Loop Variables
     let isSimulationRunning = true;
+    let simSpeedMultiplier = 1;
     let lastAnimTimestamp = null;
     let lastWeatherUpdateKm = -1;
+    let isFollowVesselActive = false;
+
+    // Filter and Search State
+    let currentStatusFilter = 'ALL';
+    let currentSearchQuery = '';
 
     // Local Storage Weather Caching Configuration
     const WEATHER_CACHE_KEY = 'dolphin_weather_cache_v1';
-    const CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes cache
+    const CACHE_TTL_MS = 10 * 60 * 1000;
 
     const statusColors = {
       'In Progress': '#2563eb',
       'Reached': '#16a34a',
-      'Disrupted': '#dc2626'
+      'Disrupted': '#dc2626',
+      'Emergency': '#dc2626'
     };
 
     const iconUrls = {
       'Plane': 'https://img.icons8.com/?size=100&id=HrxNQff0Qrmc&format=png&color=000000',
-      'Train': 'https://img.icons8.com/?size=100&id=11354&format=png&color=000000',
+      'Train': 'https://img.icons8.com/?size=100&id=EICoXlvi9nJe&format=png&color=000000',
       'Ship': 'https://img.icons8.com/?size=100&id=15133&format=png&color=000000'
     };
 
-    // Location markers (Start/End & Stoppage)
+    // Location markers
     const locationMarkerIcon = L.icon({
       iconUrl: 'https://img.icons8.com/?size=100&id=13778&format=png&color=000000',
       iconSize: [28, 28],
@@ -748,18 +1302,25 @@
       popupAnchor: [0, -20]
     });
 
+    const defenceMarkerIcon = L.icon({
+      iconUrl: 'https://img.icons8.com/?size=100&id=63654&format=png&color=000000',
+      iconSize: [30, 30],
+      iconAnchor: [15, 15],
+      popupAnchor: [0, -15]
+    });
+
     window.onload = function() {
       precalculateRouteGeometries();
       initDashboardStats();
       renderOrderList();
       initMap();
+      plotDefenceAssets();
       plotAllOrders();
       initRainViewerRadar();
       initLiveWeatherHeatmap();
       startGlobalLiveSimulation();
     };
 
-    // Weather LocalStorage Cache Helpers
     function getCachedWeatherData(lat, lon) {
       try {
         const key = `${lat.toFixed(2)}_${lon.toFixed(2)}`;
@@ -803,7 +1364,6 @@
       return R * c;
     }
 
-    // Compass Bearing Calculation for smooth icon rotation
     function getBearing(lat1, lon1, lat2, lon2) {
       const p1 = lat1 * Math.PI / 180;
       const p2 = lat2 * Math.PI / 180;
@@ -862,7 +1422,8 @@
 
     function createVesselIcon(type, heading) {
       const url = iconUrls[type] || iconUrls['Ship']; 
-      const rotationOffset = (type === 'Ship') ? 180 : 0; 
+      const rotationOffset = (type === 'Ship' || type == 'Train') ? 180 : 0; 
+      
       return L.divIcon({
         className: 'custom-vessel-marker',
         html: `<div class="vessel-icon-wrapper" style="transform: rotate(${Math.round(heading + rotationOffset)}deg);">
@@ -874,8 +1435,8 @@
     }
 
     function initDashboardStats() {
-      const inProgress = ordersData.filter(o => o.status === 'In Progress').length;
-      const disrupted = ordersData.filter(o => o.status === 'Disrupted').length;
+      const inProgress = ordersData.filter(o => o.status === 'In Progress' && !o.isEmergency).length;
+      const disrupted = ordersData.filter(o => o.status === 'Disrupted' || o.isEmergency).length;
       const reached = ordersData.filter(o => o.status === 'Reached').length;
       const total = ordersData.length;
       const reachedRate = total > 0 ? ((reached / total) * 100).toFixed(1) : "0.0";
@@ -890,12 +1451,42 @@
       const container = document.getElementById('orders-list');
       container.innerHTML = '';
 
-      ordersData.forEach(order => {
-        const badgeClass = order.status === 'In Progress' ? 'badge-in-progress' :
-                          (order.status === 'Reached' ? 'badge-reached' : 'badge-disrupted');
+      const filteredOrders = ordersData.filter(order => {
+        let matchesStatus = false;
+        if (currentStatusFilter === 'ALL') matchesStatus = true;
+        else if (currentStatusFilter === 'EMERGENCY') matchesStatus = order.isEmergency;
+        else matchesStatus = (order.status === currentStatusFilter && !order.isEmergency);
+
+        const q = currentSearchQuery.toLowerCase();
+        const matchesSearch = !q || 
+          order.id.toLowerCase().includes(q) || 
+          order.name.toLowerCase().includes(q) || 
+          order.title.toLowerCase().includes(q) || 
+          order.station.toLowerCase().includes(q);
+        return matchesStatus && matchesSearch;
+      });
+
+      if (filteredOrders.length === 0) {
+        container.innerHTML = `<div style="padding: 12px; font-size: 11px; color: #64748b; text-align: center;">No shipments match criteria</div>`;
+        return;
+      }
+
+      filteredOrders.forEach(order => {
+        let badgeClass = 'badge-in-progress';
+        let badgeLabel = order.status;
+
+        if (order.isEmergency) {
+          badgeClass = 'badge-emergency';
+          badgeLabel = '🚨 EMERGENCY SOS';
+        } else if (order.status === 'Reached') {
+          badgeClass = 'badge-reached';
+        } else if (order.status === 'Disrupted') {
+          badgeClass = 'badge-disrupted';
+        }
 
         const card = document.createElement('div');
-        card.className = `order-card ${order.id === selectedOrderId ? 'active' : ''}`;
+        const isSelected = order.id === selectedOrderId;
+        card.className = `order-card ${isSelected ? 'active' : ''} ${order.isEmergency ? 'emergency-active' : ''}`;
         card.id = `order-card-${order.id}`;
         card.onclick = () => selectOrder(order.id);
 
@@ -903,17 +1494,34 @@
           <div class="order-id-line">${order.num}) ${order.id}</div>
           <div class="order-title">${order.title}</div>
           <div class="order-address">${order.address}</div>
-          <span class="badge ${badgeClass}" id="badge-${order.id}">${order.status}</span>
+          <span class="badge ${badgeClass}" id="badge-${order.id}">${badgeLabel}</span>
         `;
         container.appendChild(card);
       });
     }
 
+    function handleSearchFilterChange() {
+      currentSearchQuery = document.getElementById('order-search-input').value;
+      renderOrderList();
+    }
+
+    function setFilterStatus(status, element) {
+      currentStatusFilter = status;
+      document.querySelectorAll('.filter-pill').forEach(btn => btn.classList.remove('active'));
+      element.classList.add('active');
+      renderOrderList();
+    }
+
     function updateOrderCardBadge(order) {
       const badge = document.getElementById(`badge-${order.id}`);
       if (badge) {
-        badge.innerText = order.status;
-        badge.className = `badge ${order.status === 'In Progress' ? 'badge-in-progress' : (order.status === 'Reached' ? 'badge-reached' : 'badge-disrupted')}`;
+        if (order.isEmergency) {
+          badge.innerText = '🚨 EMERGENCY SOS';
+          badge.className = 'badge badge-emergency';
+        } else {
+          badge.innerText = order.status;
+          badge.className = `badge ${order.status === 'In Progress' ? 'badge-in-progress' : (order.status === 'Reached' ? 'badge-reached' : 'badge-disrupted')}`;
+        }
       }
     }
 
@@ -934,8 +1542,8 @@
       });
 
       map = L.map('map', {
-        center: [-48.0, 40.0],
-        zoom: 3,
+        center: [-20.0, 20.0],
+        zoom: 2,
         layers: [satellite]
       });
 
@@ -945,18 +1553,25 @@
         "Topographic Terrain": terrain
       };
 
-      // Set collapsed: true to make layer switching panel collapsible
       mapLayersControl = L.control.layers(baseLayers, {}, { collapsed: true }).addTo(map);
+    }
+
+    function plotDefenceAssets() {
+      defenceAssets.forEach(asset => {
+        const marker = L.marker([asset.lat, asset.lon], { icon: defenceMarkerIcon }).addTo(map);
+        marker.bindTooltip(`<b>🛡️ ${asset.name}</b><br>Type: ${asset.type}<br>Callsign: ${asset.callsign}`, { direction: 'top' });
+        defenceMarkers.push(marker);
+      });
     }
 
     function plotAllOrders() {
       ordersData.forEach(order => {
         const latLngs = order.route.map(r => [r.lat, r.lon]);
-        const color = statusColors[order.status] || '#2563eb';
+        const color = order.isEmergency ? '#dc2626' : (statusColors[order.status] || '#2563eb');
 
         const polyline = L.polyline(latLngs, {
           color: color,
-          weight: 4,
+          weight: order.isEmergency ? 5 : 4,
           opacity: 0.85
         }).addTo(map);
 
@@ -977,7 +1592,6 @@
           }).addTo(map);
         }
 
-        // Add Waypoint Location Markers (Start, Stoppage Points, and End)
         const waypointMarkers = [];
         const routeLen = order.route.length;
         
@@ -999,7 +1613,6 @@
           waypointMarkers.push(wpMarker);
         });
 
-        // Moving Vessel Marker
         const initialPos = getInterpolatedPointAndBearing(order, order.completedDistKm);
         const marker = L.marker([initialPos.lat, initialPos.lon], {
           icon: createVesselIcon(order.type, initialPos.bearing)
@@ -1008,16 +1621,30 @@
         marker.bindTooltip(`<b>${order.id}</b><br>${order.name}`, { permanent: false, direction: 'top' });
         marker.on('click', () => selectOrder(order.id));
 
+        let sosCircle = null;
+        if (order.isEmergency) {
+          sosCircle = L.circleMarker([initialPos.lat, initialPos.lon], {
+            radius: 18,
+            color: '#dc2626',
+            fillColor: '#ef4444',
+            fillOpacity: 0.4,
+            weight: 3
+          }).addTo(map);
+        }
+
         orderLayers[order.id] = {
           polyline: polyline,
           decorator: decorator,
           marker: marker,
-          waypoints: waypointMarkers
+          waypoints: waypointMarkers,
+          sosCircle: sosCircle,
+          rescueLine: null,
+          alternatePolyline: null
         };
       });
     }
 
-    // FOSS RainViewer API Real-Time Radar Integration
+    // RainViewer Radar Overlay
     async function initRainViewerRadar() {
       try {
         const response = await fetch('https://api.rainviewer.com/public/weather-maps.json');
@@ -1039,36 +1666,32 @@
       }
     }
 
-    // Weather Heatmap Layer Initialization
+    // Weather Heatmap Layer
     async function initLiveWeatherHeatmap() {
       const heatPoints = [];
       
-      // Dense sampling across Antarctic & Southern Ocean logistics corridors
       const keyRoutePoints = [
         [-33.91, 18.42], [-40.2, 25.4], [-46.50, 32.10], [-51.2, 41.5], [-56.20, 51.50], 
         [-60.5, 60.1], [-64.10, 68.30], [-67.2, 72.5], [-69.40, 76.18], [-42.1, 16.5], 
         [-51.50, 15.20], [-61.0, 13.8], [-68.2, 12.1], [-70.82, 11.64], [-70.76, 11.73], 
         [-10.0, 68.0], [-20.16, 57.50], [-35.0, 48.0], [-48.00, 42.00], [-58.0, 28.0], 
-        [-68.50, 12.00], [-73.50, 14.80], [-75.10, 18.20], [-66.0, 70.0], [-68.0, 75.0]
+        [-68.50, 12.00], [-73.50, 14.80], [-75.10, 18.20], [-66.0, 70.0], [-68.0, 75.0],
+        [69.64, 18.95], [74.44, 19.05], [76.50, 16.50], [78.24, 15.46], [78.92, 11.92]
       ];
 
-      // Generate continuous atmospheric wind/storm intensity points along Antarctic storm belts
       for (const [lat, lon] of keyRoutePoints) {
         let intensity = 0.5;
         
-        // Fetch real Open-Meteo current wind speed where available
         const wx = await fetchOpenMeteoWeather(lat, lon);
         if (wx && wx.wind_speed_10m !== undefined) {
           intensity = Math.min(1.0, Math.max(0.3, wx.wind_speed_10m / 55.0));
         } else {
-          // Fallback based on latitude storm belts (Roaring 40s & Furious 50s high wind intensity)
           const absLat = Math.abs(lat);
           if (absLat >= 40 && absLat <= 65) intensity = 0.85;
           else if (absLat > 65) intensity = 0.65;
           else intensity = 0.4;
         }
 
-        // Add primary point and small cluster around it for solid visual intensity
         heatPoints.push([lat, lon, intensity]);
         heatPoints.push([lat + 0.8, lon + 1.2, intensity * 0.9]);
         heatPoints.push([lat - 0.8, lon - 1.2, intensity * 0.85]);
@@ -1104,12 +1727,12 @@
 
         if (isSimulationRunning) {
           ordersData.forEach(order => {
-            if (order.status === 'In Progress') {
+            if (order.status === 'In Progress' && !order.isEmergency) {
               let simSpeedKmPerSec = 5; 
               if (order.type === 'Plane') simSpeedKmPerSec = 15; 
               else if (order.type === 'Train') simSpeedKmPerSec = 10; 
 
-              order.completedDistKm += simSpeedKmPerSec * dt;
+              order.completedDistKm += (simSpeedKmPerSec * simSpeedMultiplier) * dt;
 
               if (order.completedDistKm >= order.computedTotalKm) {
                 order.completedDistKm = order.computedTotalKm;
@@ -1123,11 +1746,18 @@
               if (layer && layer.marker) {
                 layer.marker.setLatLng([posInfo.lat, posInfo.lon]);
                 layer.marker.setIcon(createVesselIcon(order.type, posInfo.bearing));
+                if (layer.sosCircle) {
+                  layer.sosCircle.setLatLng([posInfo.lat, posInfo.lon]);
+                }
               }
 
               if (selectedOrderId === order.id) {
                 updateUIProgressMetrics(order, order.completedDistKm);
                 
+                if (isFollowVesselActive) {
+                  map.panTo([posInfo.lat, posInfo.lon], { animate: false });
+                }
+
                 if (lastWeatherUpdateKm < 0 || Math.abs(order.completedDistKm - lastWeatherUpdateKm) > 1500) {
                   lastWeatherUpdateKm = order.completedDistKm;
                   updateWeatherPanel(posInfo.lat, posInfo.lon);
@@ -1149,18 +1779,41 @@
       btn.style.backgroundColor = isSimulationRunning ? "#0f172a" : "#2563eb";
     }
 
+    function cycleSimSpeed() {
+      if (simSpeedMultiplier === 1) simSpeedMultiplier = 2;
+      else if (simSpeedMultiplier === 2) simSpeedMultiplier = 5;
+      else if (simSpeedMultiplier === 5) simSpeedMultiplier = 10;
+      else simSpeedMultiplier = 1;
+
+      document.getElementById('btn-speed-sim').innerText = `Speed: ${simSpeedMultiplier}x`;
+    }
+
+    function toggleFollowVessel() {
+      isFollowVesselActive = !isFollowVesselActive;
+      const btn = document.getElementById('btn-follow-vessel');
+      if (isFollowVesselActive) {
+        btn.classList.add('btn-toggle-active');
+        btn.innerText = "Camera Locked (Tracking Vessel)";
+        const order = ordersData.find(o => o.id === selectedOrderId);
+        if (order) {
+          const pos = getInterpolatedPointAndBearing(order, order.completedDistKm);
+          map.panTo([pos.lat, pos.lon]);
+        }
+      } else {
+        btn.classList.remove('btn-toggle-active');
+        btn.innerText = "Lock Camera on Vessel";
+      }
+    }
+
     async function selectOrder(id) {
       selectedOrderId = id;
       lastWeatherUpdateKm = -1;
 
-      document.querySelectorAll('.order-card').forEach(c => c.classList.remove('active'));
-      const activeCard = document.getElementById(`order-card-${id}`);
-      if (activeCard) activeCard.classList.add('active');
+      renderOrderList();
 
       const order = ordersData.find(o => o.id === id);
       if (!order) return;
 
-      // Filter Map: Show selected vessel path and associated waypoint location markers
       Object.keys(orderLayers).forEach(orderId => {
         const l = orderLayers[orderId];
         const isSelected = (orderId === id);
@@ -1169,16 +1822,17 @@
           if (!map.hasLayer(l.polyline)) map.addLayer(l.polyline);
           if (l.decorator && !map.hasLayer(l.decorator)) map.addLayer(l.decorator);
           if (!map.hasLayer(l.marker)) map.addLayer(l.marker);
+          if (l.sosCircle && !map.hasLayer(l.sosCircle)) map.addLayer(l.sosCircle);
           if (l.waypoints) l.waypoints.forEach(wp => { if (!map.hasLayer(wp)) map.addLayer(wp); });
         } else {
           if (map.hasLayer(l.polyline)) map.removeLayer(l.polyline);
           if (l.decorator && map.hasLayer(l.decorator)) map.removeLayer(l.decorator);
           if (map.hasLayer(l.marker)) map.removeLayer(l.marker);
+          if (l.sosCircle && map.hasLayer(l.sosCircle)) map.removeLayer(l.sosCircle);
           if (l.waypoints) l.waypoints.forEach(wp => { if (map.hasLayer(wp)) map.removeLayer(wp); });
         }
       });
 
-      // Show Details Sidebar
       const detailsPanel = document.getElementById('details-panel');
       detailsPanel.style.display = 'flex';
       map.invalidateSize();
@@ -1189,8 +1843,49 @@
       document.getElementById('det-vessel-name').innerText = order.name;
       document.getElementById('det-captain').innerText = order.captain;
 
+      // Render Messages
+      renderCommsMessages(order);
+
+      // Populate Emergency SOS Controls
+      const sosBox = document.getElementById('sos-box');
+      const sosBtn = document.getElementById('btn-toggle-sos');
+
+      if (order.isEmergency) {
+        sosBox.classList.add('active');
+        document.getElementById('sos-desc').innerText = `🚨 ${order.name} has broadcasted an emergency distress signal! (${order.delayReason})`;
+        sosBtn.innerText = "Cancel Emergency SOS";
+        sosBtn.className = "action-btn btn-secondary";
+      } else {
+        sosBox.classList.remove('active');
+        sosBtn.innerText = "Declare Emergency SOS";
+        sosBtn.className = "action-btn btn-danger";
+      }
+
+      // Populate Cargo Details
       document.getElementById('det-mass').innerText = `${order.cargoMassTons} Tons`;
       document.getElementById('det-volume').innerText = `${order.cargoVolumeM3} m³`;
+      document.getElementById('det-cargo-category').innerText = order.cargoCategory || '-';
+      document.getElementById('det-cargo-temp').innerText = order.cargoTemp || '-';
+      document.getElementById('det-cargo-hazmat').innerText = order.hazmat || '-';
+      document.getElementById('det-cargo-units').innerText = order.cargoUnits || '-';
+
+      // Render Itemized Cargo Manifest Table
+      const cargoTable = document.getElementById('cargo-table-body');
+      cargoTable.innerHTML = '';
+      if (order.cargoManifest && order.cargoManifest.length > 0) {
+        order.cargoManifest.forEach(item => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${item.item}</td>
+            <td>${item.qty}</td>
+            <td>${item.weight}</td>
+          `;
+          cargoTable.appendChild(tr);
+        });
+      } else {
+        cargoTable.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#64748b;">No manifest available</td></tr>';
+      }
+
       document.getElementById('det-speed').innerText = `${order.speedKnots} Knots`;
 
       updateUIProgressMetrics(order, order.completedDistKm);
@@ -1198,25 +1893,275 @@
       document.getElementById('det-delay').innerText = `+${order.delayHours} Hours`;
       document.getElementById('det-delay-reason').innerText = order.delayReason;
 
+      // Render Waypoints Route Table
+      renderRouteTable(order);
+
+      const activeLayer = orderLayers[id];
+      if (activeLayer && activeLayer.polyline && !isFollowVesselActive) {
+        map.fitBounds(activeLayer.polyline.getBounds(), { padding: [50, 50] });
+      }
+
+      const currentPos = getInterpolatedPointAndBearing(order, order.completedDistKm);
+      await updateWeatherPanel(currentPos.lat, currentPos.lon);
+    }
+
+    function renderRouteTable(order) {
       const routeTable = document.getElementById('route-table-body');
       routeTable.innerHTML = '';
       order.route.forEach((pt, idx) => {
         const tr = document.createElement('tr');
-        const tag = idx === 0 ? " (Start)" : (idx === order.route.length - 1 ? " (End)" : " (Stoppage)");
+        const tag = idx === 0 ? " (Start)" : (idx === order.route.length - 1 ? " (End)" : " (Waypoint)");
         tr.innerHTML = `
           <td>${idx + 1}. ${pt.name}${tag}</td>
           <td>${pt.lat.toFixed(2)}°, ${pt.lon.toFixed(2)}°</td>
         `;
         routeTable.appendChild(tr);
       });
+    }
 
-      const activeLayer = orderLayers[id];
-      if (activeLayer && activeLayer.polyline) {
-        map.fitBounds(activeLayer.polyline.getBounds(), { padding: [50, 50] });
+    /* MESSAGING TERMINAL LOGIC */
+    function renderCommsMessages(order) {
+      const box = document.getElementById('comms-log-box');
+      box.innerHTML = '';
+      if (!order.messages) order.messages = [];
+
+      order.messages.forEach(m => {
+        const div = document.createElement('div');
+        let bubbleClass = 'msg-in';
+        if (m.type === 'out') bubbleClass = 'msg-out';
+        else if (m.type === 'defence') bubbleClass = 'msg-defence';
+
+        div.className = `msg-bubble ${bubbleClass}`;
+        div.innerHTML = `
+          <div class="msg-meta">${m.sender} &bull; ${m.time}</div>
+          <div>${m.text}</div>
+        `;
+        box.appendChild(div);
+      });
+      box.scrollTop = box.scrollHeight;
+    }
+
+    function sendCommsMessage() {
+      if (!selectedOrderId) return;
+      const input = document.getElementById('comms-text-input');
+      const text = input.value.trim();
+      if (!text) return;
+
+      const order = ordersData.find(o => o.id === selectedOrderId);
+      if (!order) return;
+
+      const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      
+      order.messages.push({
+        sender: "Dispatch HQ",
+        type: "out",
+        text: text,
+        time: timeStr
+      });
+
+      input.value = '';
+      renderCommsMessages(order);
+
+      // Automated incoming reply simulation
+      setTimeout(() => {
+        let replySender = order.captain;
+        let replyText = `Acknowledged dispatch. Current position copy clear.`;
+        let replyType = "in";
+
+        if (order.isEmergency) {
+          replySender = "Coast Guard Tactical";
+          replyText = `DISTRESS REPLY: Coast Guard personnel monitoring ${order.name}. Standby for intercept instructions.`;
+          replyType = "defence";
+        }
+
+        order.messages.push({
+          sender: replySender,
+          type: replyType,
+          text: replyText,
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        });
+        renderCommsMessages(order);
+      }, 1200);
+    }
+
+    /* EMERGENCY RESPONSE CONTROLLER FUNCTIONS */
+    function toggleEmergencySOS() {
+      if (!selectedOrderId) return;
+      const order = ordersData.find(o => o.id === selectedOrderId);
+      if (!order) return;
+
+      order.isEmergency = !order.isEmergency;
+      if (order.isEmergency) {
+        order.status = "Disrupted";
+        showToastAlert(`🚨 Emergency SOS Declared for ${order.name}! Defence Command & Coast Guard Notified.`);
+      } else {
+        order.status = "In Progress";
+        showToastAlert(`✅ Emergency SOS cleared for ${order.name}. Standard operations resumed.`);
       }
 
-      const currentPos = getInterpolatedPointAndBearing(order, order.completedDistKm);
-      await updateWeatherPanel(currentPos.lat, currentPos.lon);
+      const layer = orderLayers[order.id];
+      if (layer.sosCircle) {
+        map.removeLayer(layer.sosCircle);
+        layer.sosCircle = null;
+      }
+
+      if (layer.rescueLine) {
+        map.removeLayer(layer.rescueLine);
+        layer.rescueLine = null;
+      }
+
+      if (order.isEmergency) {
+        const pos = getInterpolatedPointAndBearing(order, order.completedDistKm);
+        layer.sosCircle = L.circleMarker([pos.lat, pos.lon], {
+          radius: 20,
+          color: '#dc2626',
+          fillColor: '#ef4444',
+          fillOpacity: 0.45,
+          weight: 3
+        }).addTo(map);
+
+        layer.polyline.setStyle({ color: '#dc2626', weight: 5 });
+      } else {
+        layer.polyline.setStyle({ color: statusColors[order.status] || '#2563eb', weight: 4 });
+      }
+
+      initDashboardStats();
+      selectOrder(order.id);
+    }
+
+    function requestDefenceCoastGuardSupport() {
+      if (!selectedOrderId) return;
+      const order = ordersData.find(o => o.id === selectedOrderId);
+      if (!order) return;
+
+      const pos = getInterpolatedPointAndBearing(order, order.completedDistKm);
+      
+      // Calculate closest Defence or Coast Guard asset
+      let closestAsset = null;
+      let minDistance = Infinity;
+
+      defenceAssets.forEach(asset => {
+        const dist = getHaversineKm(pos.lat, pos.lon, asset.lat, asset.lon);
+        if (dist < minDistance) {
+          minDistance = dist;
+          closestAsset = asset;
+        }
+      });
+
+      if (closestAsset) {
+        const layer = orderLayers[order.id];
+        if (layer.rescueLine) map.removeLayer(layer.rescueLine);
+
+        layer.rescueLine = L.polyline([
+          [pos.lat, pos.lon],
+          [closestAsset.lat, closestAsset.lon]
+        ], {
+          color: '#1e3a8a',
+          dashArray: '6, 6',
+          weight: 4
+        }).addTo(map);
+
+        const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        order.messages.push({
+          sender: closestAsset.name,
+          type: "defence",
+          text: `🛡️ DEFENCE ACKNOWLEDGEMENT: ${closestAsset.type} (${closestAsset.callsign}) altering course to assist. Distance: ${Math.round(minDistance)} km. Standby for air-sea coordination.`,
+          time: timeStr
+        });
+
+        renderCommsMessages(order);
+        showToastAlert(`🛡️ Defence Assistance Dispatched from ${closestAsset.name} (${Math.round(minDistance)} km away)!`);
+      }
+    }
+
+    function dispatchNearestSupport() {
+      if (!selectedOrderId) return;
+      const targetOrder = ordersData.find(o => o.id === selectedOrderId);
+      if (!targetOrder) return;
+
+      const targetPos = getInterpolatedPointAndBearing(targetOrder, targetOrder.completedDistKm);
+      
+      let nearestVessel = null;
+      let minDistance = Infinity;
+
+      ordersData.forEach(o => {
+        if (o.id !== targetOrder.id && o.status !== 'Reached') {
+          const pos = getInterpolatedPointAndBearing(o, o.completedDistKm);
+          const dist = getHaversineKm(targetPos.lat, targetPos.lon, pos.lat, pos.lon);
+          if (dist < minDistance) {
+            minDistance = dist;
+            nearestVessel = { order: o, pos: pos, distKm: dist };
+          }
+        }
+      });
+
+      if (nearestVessel) {
+        const layer = orderLayers[targetOrder.id];
+        if (layer.rescueLine) map.removeLayer(layer.rescueLine);
+
+        layer.rescueLine = L.polyline([
+          [targetPos.lat, targetPos.lon],
+          [nearestVessel.pos.lat, nearestVessel.pos.lon]
+        ], {
+          color: '#d97706',
+          dashArray: '8, 8',
+          weight: 4
+        }).addTo(map);
+
+        const estHours = (nearestVessel.distKm / (nearestVessel.order.speedKnots * 1.852)).toFixed(1);
+
+        showToastAlert(`🛟 Support Dispatched: ${nearestVessel.order.name} (${nearestVessel.order.type}) diverting to assist! Intercept in ${estHours} hrs (${Math.round(nearestVessel.distKm)} km away).`);
+      } else {
+        showToastAlert(`⚠️ No operational support vessels in immediate polar range. Defence Control alerted.`);
+      }
+    }
+
+    function rerouteToSafeHaven() {
+      if (!selectedOrderId) return;
+      const order = ordersData.find(o => o.id === selectedOrderId);
+      if (!order) return;
+
+      const altWaypoints = alternateRoutesConfig[order.id];
+      const layer = orderLayers[order.id];
+
+      if (altWaypoints) {
+        const curPos = getInterpolatedPointAndBearing(order, order.completedDistKm);
+        const newRoute = [{ name: "Emergency Detour Point", lat: curPos.lat, lon: curPos.lon }, ...altWaypoints];
+
+        // Redraw polyline to alternate emergency route
+        order.route = newRoute;
+        precalculateRouteGeometries();
+        order.completedDistKm = 0; // reset along new alternate segment
+
+        if (layer.polyline) map.removeLayer(layer.polyline);
+        if (layer.decorator) map.removeLayer(layer.decorator);
+
+        const latLngs = order.route.map(r => [r.lat, r.lon]);
+        layer.polyline = L.polyline(latLngs, {
+          color: '#d97706',
+          weight: 5,
+          dashArray: '5, 10'
+        }).addTo(map);
+
+        order.delayReason = "Executing Alternate Emergency Escort Route to Safe Haven.";
+        document.getElementById('det-delay-reason').innerText = order.delayReason;
+
+        renderRouteTable(order);
+        showToastAlert(`⚓ Emergency Alternate Route Activated! Navigating via Coast Guard Escort Channel.`);
+      } else {
+        order.delayReason = "Rerouted to safe haven ice-shelf anchorage due to polar storm emergency.";
+        document.getElementById('det-delay-reason').innerText = order.delayReason;
+        showToastAlert(`⚓ Emergency route updated for ${order.name}. Navigating to nearest ice shelf safe haven.`);
+      }
+    }
+
+    function showToastAlert(text) {
+      const toast = document.getElementById('toast-alert');
+      document.getElementById('toast-text').innerText = text;
+      toast.style.display = 'flex';
+      setTimeout(() => {
+        toast.style.display = 'none';
+      }, 5500);
     }
 
     function updateUIProgressMetrics(order, currentKm) {
@@ -1226,6 +2171,23 @@
       const progressPct = Math.min(100, Math.round((currentKm / order.computedTotalKm) * 100));
       document.getElementById('det-progress-text').innerText = `${progressPct}%`;
       document.getElementById('det-progress-bar').style.width = `${progressPct}%`;
+
+      if (order.status === 'Reached') {
+        document.getElementById('det-eta').innerText = "Arrived at Destination";
+      } else {
+        const speedKmH = order.speedKnots * 1.852;
+        const totalHoursLeft = (distRem / speedKmH) + order.delayHours;
+        const days = Math.floor(totalHoursLeft / 24);
+        const hrs = Math.floor(totalHoursLeft % 24);
+        const mins = Math.floor((totalHoursLeft * 60) % 60);
+
+        let etaStr = "";
+        if (days > 0) etaStr += `${days}d `;
+        if (hrs > 0 || days > 0) etaStr += `${hrs}h `;
+        etaStr += `${mins}m remaining`;
+
+        document.getElementById('det-eta').innerText = etaStr;
+      }
     }
 
     async function fetchOpenMeteoWeather(lat, lon) {
@@ -1272,7 +2234,7 @@
       if (code >= 71 && code <= 77) return "Snowfall / Ice Pellets";
       if (code >= 80 && code <= 82) return "Rain Showers";
       if (code >= 85 && code <= 86) return "Heavy Snow Showers";
-      if (code >= 95) return "Antarctic Storm";
+      if (code >= 95) return "Polar Storm";
       return "Overcast";
     }
 
@@ -1285,18 +2247,70 @@
       document.getElementById('details-panel').style.display = 'none';
       document.querySelectorAll('.order-card').forEach(c => c.classList.remove('active'));
       selectedOrderId = null;
+      isFollowVesselActive = false;
 
-      // Re-enable visibility of all active vessel markers, waypoints & polylines
+      const btnFollow = document.getElementById('btn-follow-vessel');
+      if (btnFollow) {
+        btnFollow.classList.remove('btn-toggle-active');
+        btnFollow.innerText = "Lock Camera on Vessel";
+      }
+
       Object.keys(orderLayers).forEach(orderId => {
         const l = orderLayers[orderId];
         if (!map.hasLayer(l.polyline)) map.addLayer(l.polyline);
         if (l.decorator && !map.hasLayer(l.decorator)) map.addLayer(l.decorator);
         if (!map.hasLayer(l.marker)) map.addLayer(l.marker);
+        if (l.sosCircle && !map.hasLayer(l.sosCircle)) map.addLayer(l.sosCircle);
         if (l.waypoints) l.waypoints.forEach(wp => { if (!map.hasLayer(wp)) map.addLayer(wp); });
       });
 
       map.invalidateSize();
-      map.setView([-48.0, 40.0], 3);
+      map.setView([-20.0, 20.0], 2);
+    }
+
+    function exportOrderCSV() {
+      const order = ordersData.find(o => o.id === selectedOrderId);
+      if (!order) return;
+
+      let csvContent = "data:text/csv;charset=utf-8,";
+      csvContent += `Shipment Manifest Log - ${order.id}\n`;
+      csvContent += `Title,${order.title.replace(/,/g, ' ')}\n`;
+      csvContent += `Status,${order.status}\n`;
+      csvContent += `Emergency SOS Active,${order.isEmergency ? 'YES' : 'NO'}\n`;
+      csvContent += `Vessel,${order.name} (${order.model})\n`;
+      csvContent += `Captain,${order.captain}\n`;
+      csvContent += `Cargo Category,${(order.cargoCategory || '').replace(/,/g, ' ')}\n`;
+      csvContent += `Cargo Mass (Tons),${order.cargoMassTons}\n`;
+      csvContent += `Cargo Volume (m3),${order.cargoVolumeM3}\n`;
+      csvContent += `Storage Temp,${(order.cargoTemp || '').replace(/,/g, ' ')}\n`;
+      csvContent += `Hazmat Rating,${(order.hazmat || '').replace(/,/g, ' ')}\n`;
+      csvContent += `Packaging Units,${(order.cargoUnits || '').replace(/,/g, ' ')}\n`;
+      csvContent += `Total Distance (Km),${order.computedTotalKm}\n`;
+      csvContent += `Completed Distance (Km),${Math.round(order.completedDistKm)}\n`;
+      csvContent += `Delay (Hours),${order.delayHours}\n`;
+      csvContent += `Delay Reason,${order.delayReason.replace(/,/g, ' ')}\n\n`;
+
+      csvContent += `CARGO MANIFEST BREAKDOWN\n`;
+      csvContent += `Item Description,Quantity,Weight\n`;
+      if (order.cargoManifest) {
+        order.cargoManifest.forEach(item => {
+          csvContent += `${item.item.replace(/,/g, ' ')},${item.qty.replace(/,/g, ' ')},${item.weight.replace(/,/g, ' ')}\n`;
+        });
+      }
+
+      csvContent += `\nWAYPOINT ROUTE DETAILS\n`;
+      csvContent += `Waypoint Index,Waypoint Name,Latitude,Longitude\n`;
+      order.route.forEach((pt, idx) => {
+        csvContent += `${idx + 1},${pt.name.replace(/,/g, ' ')},${pt.lat},${pt.lon}\n`;
+      });
+
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", `${order.id}_manifest.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     }
   </script>
 </body>
