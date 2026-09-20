@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DOLPHIN — Personnel Operations</title>
+<style>
+:root{
+  --bg:#f4f7f9; --panel:#fff; --line:#d9e1e7; --text:#17232d; --muted:#71808c;
+  --blue:#1769aa; --blue2:#eaf3fa; --green:#237a57; --green2:#eaf6f0;
+  --amber:#a96800; --amber2:#fff5df; --red:#a33a3a; --red2:#fbecec; --slate:#526372;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:13px}
+button,input,select{font:inherit}
+button{cursor:pointer}
+.topbar{height:58px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;padding:0 28px;justify-content:space-between}
+.brand{font-weight:800;letter-spacing:.22em;font-size:17px}
+.topright{display:flex;align-items:center;gap:18px;color:var(--muted);font-size:12px}
+.live{display:flex;align-items:center;gap:7px;color:var(--green);font-weight:700}.dot{width:7px;height:7px;border-radius:50%;background:#2c8a63}
+.page{padding:22px 28px 30px;max-width:1600px;margin:auto}
+.head{display:flex;justify-content:space-between;align-items:end;margin-bottom:18px}
+.eyebrow{font-size:10px;letter-spacing:.18em;color:#788895;font-weight:800;text-transform:uppercase}
+h1{font-size:30px;line-height:1;margin:5px 0 6px;letter-spacing:-.03em}
+.sub{color:var(--muted)}
+.primary{border:1px solid #0f5d99;background:#1769aa;color:#fff;border-radius:5px;padding:10px 15px;font-weight:700}
+.primary:hover{background:#155e96}
+.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:12px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:14px 16px}
+.stat .n{font-size:25px;font-weight:750;line-height:1.1}.stat .l{font-size:11px;color:var(--muted);margin-top:5px}
+.layout{display:grid;grid-template-columns:300px minmax(500px,1fr) 330px;gap:10px}
+.panel{background:#fff;border:1px solid var(--line);border-radius:6px;overflow:hidden;min-width:0}
+.panelhead{height:49px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 14px;font-weight:750}
+.panelhead small{font-weight:600;color:var(--muted)}
+.directory-tools{padding:10px;border-bottom:1px solid var(--line);display:grid;gap:7px}
+input,select{height:34px;border:1px solid #cfd9e0;border-radius:4px;background:#fff;color:var(--text);padding:0 9px;outline:none}
+input:focus,select:focus{border-color:#7ba9c8}
+.filters{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.people{max-height:625px;overflow:auto}
+.person{padding:11px 13px;border-bottom:1px solid #e5ebef;display:grid;grid-template-columns:34px 1fr;gap:10px;position:relative;cursor:pointer}
+.person:hover{background:#f7fafc}.person.active{background:#edf5fa}.person.active:before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--blue)}
+.avatar{width:34px;height:34px;border:1px solid #d3dfe6;background:#f3f7f9;border-radius:50%;display:grid;place-items:center;font-size:10px;font-weight:800;color:#60717e}
+.pname{font-weight:750}.pid{font-size:10px;color:var(--muted);margin-top:2px}
+.prow{display:flex;justify-content:space-between;align-items:center;margin-top:8px;color:var(--muted);font-size:10px}
+.badge{display:inline-flex;align-items:center;border-radius:3px;padding:3px 6px;font-size:10px;font-weight:750;border:1px solid transparent}
+.safe{background:var(--green2);color:var(--green);border-color:#cfe9dc}.transit{background:var(--blue2);color:var(--blue);border-color:#cfe1ee}.field{background:var(--amber2);color:var(--amber);border-color:#eed7a9}.attention{background:var(--red2);color:var(--red);border-color:#edcaca}.offline{background:#eef1f3;color:#5e6d78;border-color:#d8dfe3}
+.mapwrap{height:674px;background:#e7eef2;position:relative}
+.maphead{position:absolute;z-index:4;left:12px;right:12px;top:10px;display:flex;justify-content:space-between;pointer-events:none}
+.maplabel,.maptime{background:#fff;border:1px solid var(--line);border-radius:4px;padding:8px 10px;box-shadow:0 1px 3px rgba(20,40,55,.08)}
+.maplabel strong{font-size:11px;display:block}.maplabel span{font-size:10px;color:var(--muted)}
+.maptime{font-size:11px;color:var(--green);font-weight:900;background:#fff;border:1px solid #cbd7dd;border-radius:6px;padding:7px 9px;box-shadow:0 2px 7px rgba(20,40,55,.10);white-space:nowrap}
+.maplegend{position:absolute;z-index:4;left:12px;bottom:12px;background:#fff;border:1px solid var(--line);border-radius:5px;padding:9px 11px;display:grid;gap:6px;font-size:10px}
+.leg{display:flex;gap:8px;align-items:center}.swatch{width:18px;height:3px;background:#1769aa}.dash{height:0;border-top:2px dashed #b87514}.stationdot{width:9px;height:9px;border:2px solid #237a57;background:#fff;transform:rotate(45deg)}
+.map svg{width:100%;height:100%;display:block}
+.station-card{fill:#fff;stroke:#c8d5dc;stroke-width:1.2}.station-roof{fill:#f5f8fa;stroke:#9eafb9;stroke-width:1}
+.station-label{font-size:12px;font-weight:800;fill:#20303b;letter-spacing:.04em}.station-sub{font-size:9px;fill:#70808b}
+.right{padding:0}.detail{padding:15px}.personhero{display:flex;gap:11px;align-items:center;padding-bottom:13px;border-bottom:1px solid var(--line)}
+.heroavatar{width:42px;height:42px;border-radius:50%;background:#f0f5f7;border:1px solid #d3dfe5;display:grid;place-items:center;font-weight:800;color:#60727f}
+.hero-name{font-size:16px;font-weight:800}.hero-meta{font-size:10px;color:var(--muted);margin-top:3px}
+.section{padding:13px 0;border-bottom:1px solid var(--line)}.section:last-child{border-bottom:0}
+.sectiontitle{font-size:10px;text-transform:uppercase;letter-spacing:.12em;font-weight:800;color:#74838e;margin-bottom:9px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}.kv span{display:block;color:var(--muted);font-size:9px;margin-bottom:3px}.kv strong{font-size:11px}
+.progress{height:6px;background:#e7edf0;border-radius:3px;margin-top:7px;overflow:hidden}.progress i{display:block;height:100%;background:#1769aa}
+.timeline{position:relative;padding-left:16px;display:grid;gap:11px}.timeline:before{content:"";position:absolute;left:4px;top:4px;bottom:4px;width:1px;background:#ccd8df}
+.event{position:relative}.event:before{content:"";position:absolute;left:-15px;top:3px;width:7px;height:7px;border-radius:50%;background:#fff;border:2px solid #8aa1af}
+.event.current:before{border-color:#1769aa;background:#1769aa}.event.plan:before{border-color:#b87514}
+.event strong{font-size:10px}.event span{display:block;color:var(--muted);font-size:9px;margin-top:2px}
+.action{width:100%;height:34px;border:1px solid #cbd8df;background:#fff;border-radius:4px;color:#35505f;font-weight:700}.action:hover{background:#f5f8fa}
+.tabs{display:flex;border-bottom:1px solid var(--line);background:#fff}.tab{border:0;background:transparent;padding:11px 13px;font-size:11px;font-weight:750;color:#71808b;border-bottom:2px solid transparent}.tab.active{color:#1769aa;border-bottom-color:#1769aa}
+.content{padding:12px}
+.hidden{display:none!important}
+.teamgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.teamcard{border:1px solid var(--line);background:#fff;border-radius:5px;padding:13px}.teamtop{display:flex;justify-content:space-between}.teamname{font-weight:800}.teammeta{font-size:10px;color:var(--muted);margin:4px 0 10px}.memberrow{display:flex;justify-content:space-between;padding:7px 0;border-top:1px solid #edf1f3;font-size:10px}.memberrow span:last-child{color:var(--muted)}
+.accountgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.account{background:#fff;border:1px solid var(--line);border-radius:5px;padding:13px}.account h3{font-size:12px;margin:0 0 5px}.bigcheck{font-size:28px;font-weight:800}.account p{margin:4px 0;color:var(--muted);font-size:10px}
+.table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--line);border-radius:5px;overflow:hidden}.table th,.table td{text-align:left;padding:10px 11px;border-bottom:1px solid #e7ecef;font-size:10px}.table th{color:#74838e;font-size:9px;text-transform:uppercase;letter-spacing:.08em;background:#f8fafb}.table tr:last-child td{border-bottom:0}
+.formgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.fieldbox label{display:block;font-size:9px;color:var(--muted);font-weight:750;margin-bottom:5px}.full{grid-column:1/-1}
+.modalback{position:fixed;inset:0;background:rgba(19,32,42,.35);display:grid;place-items:center;z-index:20}.modal{width:min(620px,calc(100vw - 30px));background:#fff;border:1px solid var(--line);border-radius:7px;box-shadow:0 12px 35px rgba(20,35,45,.18)}.modalhead{padding:15px 17px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;font-weight:800}.close{border:0;background:transparent;font-size:18px;color:#697984}.modalbody{padding:17px}.modalfoot{padding:12px 17px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:8px}
+.secondary{border:1px solid #cbd8df;background:#fff;border-radius:4px;padding:9px 13px;font-weight:700;color:#445b69}
+.notice{padding:10px 11px;border:1px solid #e3d4b0;background:#fff8e9;color:#7d5a15;border-radius:4px;font-size:10px;line-height:1.5}
+
+#mapCanvas{position:absolute;inset:0}.mapwrap{overflow:hidden;border:1px solid var(--line)}
+
+.maptools{position:absolute;z-index:5;right:54px;top:12px;display:flex;gap:6px}.maptools button{height:32px;padding:0 10px;border:1px solid #cfd9e0;background:#fff;border-radius:4px;color:#38515f;font-size:10px;font-weight:800;box-shadow:0 2px 6px rgba(20,40,55,.08)}.maptools button:hover{background:#f5f8fa}
+.mapstatus{position:absolute;z-index:5;right:12px;bottom:12px;background:#fff;border:1px solid var(--line);border-radius:5px;padding:9px 11px;box-shadow:0 2px 7px rgba(20,40,55,.10);display:grid;gap:2px;min-width:180px}.mapstatus strong{font-size:11px}.mapstatus span{font-size:10px;color:var(--muted)}
+.legend-dot{display:inline-block;width:9px;height:9px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px #526372}.legend-dot.station{background:#237a57;box-shadow:0 0 0 1px #237a57}.legend-dot.selected{background:#1769aa;box-shadow:0 0 0 1px #1769aa}.legend-dot.fieldzone{background:#fff;box-shadow:0 0 0 1px #8b9da8}.legend-line{width:19px;height:3px;display:inline-block}.legend-line.active{background:#1769aa}.legend-line.planned{border-top:2px dashed #a96800;height:0}
+@media(max-width:1150px){.layout{grid-template-columns:260px 1fr}.right{grid-column:1/-1}.mapwrap{height:560px}.teamgrid,.accountgrid{grid-template-columns:1fr}}
+@media(max-width:760px){.stats{grid-template-columns:repeat(2,1fr)}.layout{grid-template-columns:1fr}.mapwrap{height:500px}.head{align-items:start;gap:12px}.formgrid{grid-template-columns:1fr}.full{grid-column:auto}}
+
+
+.polar-map{position:absolute;inset:0;background:#dce7ec;overflow:hidden}.polar-map svg{width:100%;height:100%;display:block;transition:transform .45s ease}.gridline{fill:none;stroke:#b9cbd3;stroke-width:1;stroke-dasharray:2 5;opacity:.65}.route-active-svg{fill:none;stroke:#1769aa;stroke-width:4;stroke-linecap:round;stroke-linejoin:round;filter:url(#shadow)}.route-planned-svg{fill:none;stroke:#a96800;stroke-width:2.5;stroke-dasharray:7 6;stroke-linecap:round;opacity:.9}.station-halo{fill:#fff;stroke:#237a57;stroke-width:2}.station-core{fill:#237a57;stroke:#fff;stroke-width:2}.station-label{font-size:13px;font-weight:800;fill:#20303b;paint-order:stroke;stroke:#fff;stroke-width:4px;stroke-linejoin:round}.person-ring{fill:#fff;stroke:#526372;stroke-width:2}.person-ring.sel{fill:#1769aa;stroke:#fff;stroke-width:3}.person-core{fill:#526372}.person-core.sel{fill:#fff}.person-label{font-size:10px;font-weight:700;fill:#334956;paint-order:stroke;stroke:#fff;stroke-width:3px;stroke-linejoin:round}.zone-ring{fill:#fff;stroke:#8b9da8;stroke-width:2;stroke-dasharray:4 4}.zone-dot{fill:#a96800}.zone-label{font-size:10px;font-weight:800;fill:#526372;paint-order:stroke;stroke:#fff;stroke-width:3px}.pole-label,.lat-label{font-size:9px;font-weight:800;fill:#728691;letter-spacing:.08em}.map-scale line{stroke:#526a76;stroke-width:2}.map-scale text{font-size:9px;fill:#526a76;font-weight:700}.person-pin,.station-pin{cursor:pointer}.person-pin:focus,.station-pin:focus{outline:none}.mapwrap{background:#dce7ec}
+/* v2 map and wearable-health refinements */
+.mapwrap{background:#dfe8ed}
+.map svg{background:#dfe8ed}
+.mapfocus{fill:none;stroke:#1769aa;stroke-width:1.5;stroke-dasharray:3 5}
+.healthgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.healthcard{border:1px solid #d8e1e6;border-radius:4px;padding:9px;background:#fbfcfd}
+.healthcard span{display:block;color:#71808c;font-size:9px;margin-bottom:3px}
+.healthcard strong{font-size:13px}
+.healthnormal{color:#237a57}.healthmonitor{color:#a96800}
+.livepos{font-weight:750;color:#1769aa}
+.map-note{position:absolute;right:12px;bottom:12px;background:#fff;border:1px solid var(--line);border-radius:4px;padding:7px 9px;font-size:9px;color:#71808c;z-index:4}
+
+/* v4 map styling: clean, judge-ready, no gradients or external dependencies */
+.polar-map{position:absolute;inset:0;background:#eaf2f6;overflow:hidden}.polar-map svg{width:100%;height:100%;display:block;transition:transform .45s ease;transform-origin:50% 50%}.ocean{fill:#eaf2f6}.ocean-disc{fill:#dfeaf0;stroke:#b5c8d2;stroke-width:1.5}.polar-frame{fill:none;stroke:#b7cad4;stroke-width:1}.gridline{fill:none;stroke:#a9c0cb;stroke-width:1;stroke-dasharray:3 6;opacity:.48}.gridlabel{font-size:9px;fill:#78909c;font-weight:700}.ice-land{fill:#f9fbfc;stroke:#91a9b5;stroke-width:2}.ice-shelf{fill:none;stroke:#c7d8df;stroke-width:5;opacity:.8}.pole-dot{fill:#536e7b}.pole-label{font-size:10px;font-weight:800;fill:#607986;letter-spacing:.08em}.map-title{font-size:13px;font-weight:800;fill:#233640;letter-spacing:.08em}.map-subtitle{font-size:10px;font-weight:650;fill:#7a8e99;letter-spacing:.04em}.station-halo{fill:#fff;stroke:#1d8b67;stroke-width:2}.station-core{fill:#1d8b67;stroke:#fff;stroke-width:2}.station-label{font-size:12px;font-weight:800;fill:#233640;paint-order:stroke;stroke:#f9fbfc;stroke-width:4px}.station-sub{font-size:8px;fill:#718792;paint-order:stroke;stroke:#f9fbfc;stroke-width:3px}.person-pin{cursor:pointer}.person-label,.selected-label{font-size:10px;font-weight:800;fill:#233640;paint-order:stroke;stroke:#fff;stroke-width:4px}.selected-status{font-size:9px;font-weight:700;fill:#617783;paint-order:stroke;stroke:#fff;stroke-width:3px}.route-under{fill:none;stroke:#fff;stroke-width:9;stroke-linecap:round;stroke-linejoin:round;opacity:.85}.route-active-svg{fill:none;stroke:#1769aa;stroke-width:4;stroke-linecap:round;stroke-linejoin:round}.route-planned-svg{fill:none;stroke:#b87818;stroke-width:2.5;stroke-dasharray:8 7;stroke-linecap:round;opacity:.95}.current-halo{fill:#1769aa;opacity:.08;stroke:#1769aa;stroke-width:1.5}.zone-ring{fill:#fff;stroke:#b87818;stroke-width:2;stroke-dasharray:4 4}.zone-dot{fill:#b87818}.zone-label{font-size:10px;font-weight:800;fill:#5f707a;paint-order:stroke;stroke:#fff;stroke-width:4px}.projection-label{font-size:9px;fill:#718691;font-weight:700;letter-spacing:.06em}.map-scale line{stroke:#526a76;stroke-width:2}.map-scale text{font-size:9px;fill:#526a76;font-weight:700}.mapwrap{background:#eaf2f6}.mapstatus{min-width:225px}
+
+/* v5 real geographic map */
+.polar-map{background:#dfe9ee!important;border-top:1px solid #cbd8df}
+.polar-map svg{background:#dfe9ee!important}
+.ocean{fill:#dfe9ee}
+.graticule{fill:none;stroke:#9fb4c0;stroke-width:1;opacity:.55}
+.meridian{stroke:#9fb4c0;stroke-width:1;opacity:.42}
+.gridlabel,.lonlabel{font-size:9px;fill:#708792;font-weight:700}
+.land{fill:#f8fafb;stroke:#718893;stroke-width:1.2;stroke-linejoin:round}
+.antarctica{fill:#f5f7f8;stroke:#516d79;stroke-width:1.7}
+.station-core{fill:#1769aa;stroke:#fff;stroke-width:2}
+.station-label{font-size:12px;font-weight:800;fill:#20333e;paint-order:stroke;stroke:#fff;stroke-width:4px}
+.station-sub{font-size:8px;fill:#71848f;paint-order:stroke;stroke:#fff;stroke-width:3px}
+.person-callout{fill:#fff;stroke:#c8d5dc;stroke-width:1;filter:drop-shadow(0 2px 3px rgba(20,40,55,.12))}
+.destination-cross{stroke:#b87818;stroke-width:2;stroke-linecap:round}
+.destination-label{font-size:10px;font-weight:800;fill:#6c561f;paint-order:stroke;stroke:#fff;stroke-width:3px}
+.current-halo{fill:none;stroke:#1769aa;stroke-width:1.5;stroke-dasharray:3 3}
+.route-under{fill:none;stroke:#fff;stroke-width:8;stroke-linecap:round;stroke-linejoin:round;opacity:.9}
+.route-active-svg{fill:none;stroke:#1769aa;stroke-width:3.5;stroke-linecap:round;stroke-linejoin:round}
+.route-planned-svg{fill:none;stroke:#b87818;stroke-width:2.2;stroke-dasharray:7 6;stroke-linecap:round}
+.pole-dot{fill:#4f6874}.pole-label{font-size:9px;font-weight:800;fill:#627985;letter-spacing:.08em}.projection-label{font-size:9px;fill:#718691;font-weight:700;letter-spacing:.05em}
+
+/* SIH personnel movement upgrade */
+.movement-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:10px}
+.movement-mini{border:1px solid var(--line);background:#f8fafb;border-radius:4px;padding:9px}.movement-mini span{display:block;font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}.movement-mini strong{display:block;margin-top:3px;font-size:11px}
+.alertbox{border:1px solid #e8c9c9;background:#fff7f7;color:#8d3535;border-radius:4px;padding:9px 10px;font-size:10px;line-height:1.45;margin-top:9px}.alertbox strong{display:block;margin-bottom:2px}
+.routebar{height:7px;background:#e7edf0;border-radius:4px;overflow:hidden;margin-top:6px}.routebar i{display:block;height:100%;background:#1769aa;border-radius:4px}
+.mapmetric{display:flex;gap:12px;flex-wrap:wrap;font-size:9px;color:var(--muted);margin-top:5px}.mapmetric b{color:#344c5a}
+
+/* SIH intelligence + clean map controls */
+.maptime-fixed{position:absolute;z-index:9;right:12px;top:58px;background:#fff;border:1px solid #cbd7dd;border-radius:7px;padding:8px 12px;box-shadow:0 3px 10px rgba(20,40,55,.14);font-size:11px;color:#1769aa;font-weight:900;white-space:nowrap}.maptime-fixed .time-label{color:#61747f;letter-spacing:.08em;margin-right:7px;font-size:9px}.maptime-fixed .dot{display:inline-block;margin-right:5px;width:7px;height:7px;border-radius:50%;background:#2c8a63}
+.map-options{position:absolute;z-index:7;right:12px;top:165px}
+.map-options>button{height:34px;border:1px solid #cbd8df;background:#fff;border-radius:5px;padding:0 12px;color:#2f4755;font-size:10px;font-weight:850;box-shadow:0 2px 7px rgba(20,40,55,.12)}
+.map-options>button:hover{background:#f5f8fa}
+.map-menu{position:absolute;right:0;top:40px;width:250px;background:#fff;border:1px solid #cbd8df;border-radius:6px;box-shadow:0 10px 28px rgba(20,40,55,.16);padding:11px;display:none}
+.map-menu.open{display:block}
+.menu-title{font-size:9px;text-transform:uppercase;letter-spacing:.12em;color:#778792;font-weight:850;margin:2px 0 7px}
+.menu-group{padding:8px 0;border-bottom:1px solid #edf1f3}.menu-group:last-child{border-bottom:0}
+.menu-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:5px 2px;font-size:10px;color:#344c5a}
+.menu-row label{display:flex;align-items:center;gap:7px;cursor:pointer}.menu-row input{width:14px;height:14px;margin:0;accent-color:#1769aa}
+.menu-seg{display:grid;grid-template-columns:1fr 1fr;gap:4px}.menu-seg-3{grid-template-columns:repeat(3,1fr)}.menu-seg button{height:27px;border:1px solid #d4dee4;background:#fff;border-radius:4px;font-size:9px;font-weight:800;color:#5b6e79}.menu-seg button.active{background:#1769aa;border-color:#1769aa;color:#fff}
+.intel-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:9px}.intel-card{border:1px solid var(--line);border-radius:5px;background:#f8fafb;padding:8px}.intel-card span{display:block;font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em}.intel-card strong{display:block;font-size:12px;margin-top:3px}.risk-low{color:var(--green)}.risk-med{color:var(--amber)}.risk-high{color:var(--red)}
+.riskbar{height:7px;background:#e7edf0;border-radius:4px;overflow:hidden;margin-top:6px}.riskbar i{display:block;height:100%;background:#b87818}.riskbar.high i{background:#c44747}.riskbar.low i{background:#237a57}
+.weather-banner{margin-top:8px;border:1px solid #d7e2e8;border-radius:5px;background:#f7fafb;padding:8px 9px;font-size:9px;line-height:1.45}.weather-banner strong{font-size:10px}.weather-banner .weather-line{display:flex;justify-content:space-between;gap:8px;margin-top:4px;color:#5f727d}
+.geofence-ok{color:var(--green)}.geofence-alert{color:var(--red)}
+.response-box{border:1px solid #e3c6c6;background:#fff7f7;border-radius:5px;padding:10px;margin-top:9px}.response-box .response-title{font-size:10px;font-weight:850;color:#8e3535}.response-box p{font-size:9px;color:#6f4c4c;margin:5px 0 8px;line-height:1.45}.response-actions{display:flex;gap:6px}.response-actions button{flex:1;height:30px;border:1px solid #d7b6b6;background:#fff;border-radius:4px;color:#8e3535;font-size:9px;font-weight:800}.response-actions button.primary-response{background:#a33a3a;color:#fff;border-color:#a33a3a}
+.compact-alert{padding:8px 9px;margin-top:8px;border-radius:4px;font-size:9px;line-height:1.45}.compact-alert.warn{background:#fff8e9;border:1px solid #e7d3a5;color:#765716}.compact-alert.red{background:#fff5f5;border:1px solid #e4c1c1;color:#8d3535}
+
+@media(max-width:1100px){.layout{grid-template-columns:260px minmax(420px,1fr)}.right{grid-column:1/-1}.stats{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:760px){.page{padding:15px}.layout{grid-template-columns:1fr}.mapwrap{height:560px}.stats{grid-template-columns:repeat(2,1fr)}.movement-strip{grid-template-columns:1fr 1fr}.teamgrid,.accountgrid{grid-template-columns:1fr}}
+/* v6 focused personnel map: reduce marker congestion and make selected movement obvious */
+.mapfocus-tools{position:absolute;z-index:6;left:50%;top:12px;transform:translateX(-50%);display:flex;gap:5px;background:#fff;border:1px solid #cbd7dd;border-radius:5px;padding:4px;box-shadow:0 2px 7px rgba(20,40,55,.10)}
+.mapfocus-tools button{border:0;background:#fff;color:#526672;font-size:9px;font-weight:800;padding:7px 10px;border-radius:3px;cursor:pointer}
+.mapfocus-tools button.active{background:#1769aa;color:#fff}
+.person-dot-muted{opacity:.34;filter:grayscale(.3)}
+.selected-live-ring{animation:livePulse 1.7s infinite}
+@keyframes livePulse{0%{box-shadow:0 0 0 0 rgba(23,105,170,.38),0 2px 6px rgba(0,0,0,.25)}70%{box-shadow:0 0 0 10px rgba(23,105,170,0),0 2px 6px rgba(0,0,0,.25)}100%{box-shadow:0 0 0 0 rgba(23,105,170,0),0 2px 6px rgba(0,0,0,.25)}}
+
+
+.station-overview{position:absolute;left:14px;bottom:76px;width:158px;background:rgba(255,255,255,.96);border:1px solid #cbd7dd;border-radius:8px;padding:9px 10px;z-index:700;box-shadow:0 4px 14px rgba(20,40,55,.10)}.so-title{font-size:9px;font-weight:850;letter-spacing:.08em;color:#61747f;margin-bottom:7px}.so-map{height:52px;position:relative;background:#edf4f7;border:1px solid #d9e3e8;border-radius:6px;overflow:hidden}.so-line{position:absolute;left:25px;right:25px;top:25px;border-top:1px dashed #aebfc8}.so-point{position:absolute;top:15px;display:flex;align-items:center;gap:4px;font-size:9px;font-weight:800;color:#253943}.so-point i{width:11px;height:11px;border-radius:50%;background:#1769aa;border:2px solid #fff;box-shadow:0 0 0 1px #1769aa;display:block}.so-point.maitri{left:8px}.so-point.bharati{right:7px}.so-point.bharati i{background:#237a57;box-shadow:0 0 0 1px #237a57}.so-note{font-size:8px;color:#7a8b95;margin-top:6px;text-align:center}
+.base-map-group{padding:6px 0 8px}
+.base-map-option{display:flex;align-items:center;gap:8px;padding:8px 6px;border-radius:5px;cursor:pointer;font-size:12px;font-weight:700;color:#344c59}
+.base-map-option:hover{background:#f3f7f9}
+.base-map-option input{margin:0;width:16px;height:16px;accent-color:#1769aa}
+.leaflet-control-layers{display:none!important}
+</style>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<style>
+/* Google/OSM-like operational map */
+#opsLeaflet{position:absolute;inset:0;background:#dbe7ed;z-index:1}
+.leaflet-container{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#dbe7ed}
+.leaflet-control-zoom{border:1px solid #c9d4da!important;box-shadow:0 2px 7px rgba(20,40,55,.12)!important}
+.leaflet-control-zoom a{color:#263944!important;background:#fff!important}
+.leaflet-control-layers{border:1px solid #c9d4da!important;box-shadow:0 2px 7px rgba(20,40,55,.12)!important}
+.leaflet-control-attribution{font-size:9px!important;background:rgba(255,255,255,.88)!important}
+.leaflet-popup-content-wrapper,.leaflet-popup-tip{box-shadow:0 4px 18px rgba(20,40,55,.16)}
+.leaflet-popup-content{margin:11px 13px;font-size:11px;line-height:1.45}.pop-title{font-weight:800;font-size:13px;color:#172b36}.pop-meta{color:#71808c;font-size:10px}.pop-row{display:flex;justify-content:space-between;gap:18px;margin-top:5px}.pop-row b{font-weight:750}
+.map-pin{width:24px;height:34px;position:relative}.map-pin:before{content:"";position:absolute;left:3px;top:1px;width:18px;height:18px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:#1769aa;border:2px solid #fff;box-shadow:0 2px 5px rgba(0,0,0,.25)}.map-pin:after{content:"";position:absolute;left:10px;top:7px;width:6px;height:6px;border-radius:50%;background:#fff}.map-pin.green:before{background:#237a57}.map-pin.amber:before{background:#b87818}.map-pin.red:before{background:#c44747}.map-pin.gray:before{background:#77848d}.station-pin{width:28px;height:38px}.station-pin:before{content:"";position:absolute;left:3px;top:1px;width:21px;height:21px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:#fff;border:3px solid #1769aa;box-shadow:0 2px 7px rgba(0,0,0,.22)}.station-pin:after{content:"";position:absolute;left:11px;top:8px;width:7px;height:7px;border-radius:50%;background:#1769aa}.station-label-map{background:#fff;border:1px solid #cbd7dd;border-radius:4px;padding:4px 7px;box-shadow:0 2px 6px rgba(20,40,55,.10);font-size:10px;font-weight:800;color:#263944;white-space:nowrap}.station-label-map span{display:block;font-size:8px;color:#71808c;font-weight:650;margin-top:1px}.selected-person-pin:before{box-shadow:0 0 0 4px rgba(23,105,170,.16),0 2px 6px rgba(0,0,0,.25)}
+.route-label{background:#fff;border:1px solid #cbd7dd;border-radius:3px;padding:3px 6px;font-size:9px;font-weight:750;color:#425764;box-shadow:0 1px 4px rgba(20,40,55,.10)}
+.map-loading{position:absolute;inset:0;z-index:8;display:grid;place-items:center;background:#e8f0f4;color:#526672;font-weight:700}.map-loading.hidden{display:none}
+</style>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+/* Personnel tracking layout: keep the three panels visually filled and give the map a real layout box. */
+.layout{display:grid;grid-template-columns:320px minmax(0,1fr) 380px;align-items:stretch;gap:12px;width:100%;height:724px;}
+.layout>.panel{height:724px;min-height:0;}
+.layout>.panel:first-child{display:flex;flex-direction:column;height:724px;min-height:0;overflow:hidden;}
+.layout>.panel.right{height:724px;min-height:0;overflow-y:auto;overflow-x:hidden;}
+.layout>.panel.right .panelhead{position:sticky;top:0;z-index:20;background:#fff;}
+.layout>.panel.right .detail{padding-bottom:24px;}
+.directory-tools{flex:0 0 auto;}
+.people{flex:1 1 auto;height:auto;min-height:0;max-height:none;overflow-y:auto;overflow-x:hidden;}
+.layout>.panel:nth-child(2){min-width:0;display:flex;flex-direction:column;}
+.layout>.panel:nth-child(2) .mapwrap{flex:1 1 auto;height:674px;min-height:674px;width:100%;position:relative;overflow:hidden;}
+#opsLeaflet{position:absolute !important;top:0 !important;right:0 !important;bottom:0 !important;left:0 !important;width:100% !important;height:100% !important;min-height:0 !important;}
+#opsLeaflet.leaflet-container{width:100% !important;height:100% !important;}
+@media(max-width:1250px){.layout{grid-template-columns:280px minmax(0,1fr) 340px;}}
+@media(max-width:1050px){.layout{grid-template-columns:260px minmax(0,1fr);height:560px;}.right{grid-column:1/-1;height:560px !important;overflow-y:auto !important;}.layout>.panel{height:560px;min-height:0}.layout>.panel:first-child{height:560px}.people{flex:1 1 auto;height:auto;min-height:0}.layout>.panel:nth-child(2) .mapwrap{height:560px;min-height:560px;}.layout>.panel:nth-child(2) #opsLeaflet{height:100% !important;min-height:0 !important;}}
+@media(max-width:760px){.layout{grid-template-columns:1fr;height:auto}.layout>.panel{height:auto}.layout>.panel.right{height:560px !important;overflow-y:auto !important}.layout>.panel:first-child{height:560px}.layout>.panel:nth-child(2) .mapwrap{height:560px;min-height:560px;}}
+</style>
+
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">DOLPHIN</div>
+  <div class="topright"><span class="live"><i class="dot"></i>LIVE</span><span id="clock">--:-- IST</span><span>Personnel</span></div>
+</header>
+
+<main class="page">
+  <div class="head">
+    <div><div class="eyebrow">Personnel operations</div><h1>Personnel</h1><div class="sub">Movement and accountability</div></div>
+    <button class="primary" id="newMove">New movement</button>
+  </div>
+
+  <section class="stats" id="stats"></section>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="tracking">Tracking</button>
+    <button class="tab" data-tab="teams">Teams</button>
+    <button class="tab" data-tab="accountability">Accountability</button>
+    <button class="tab" data-tab="planning">Movement planning</button>
+    <button class="tab" data-tab="history">Movement history</button>
+  </div>
+
+  <section id="tracking" class="tabcontent">
+    <div class="layout">
+      <aside class="panel">
+        <div class="panelhead"><span>Personnel</span><small id="count">10</small></div>
+        <div class="directory-tools">
+          <input id="search" placeholder="Search personnel">
+          <div class="filters">
+            <select id="stationFilter"><option value="">All stations</option><option>Maitri</option><option>Bharati</option></select>
+            <select id="statusFilter"><option value="">All status</option><option>At Station</option><option>In Transit</option><option>Field Mission</option><option>Attention</option><option>Offline</option></select>
+          </div>
+        </div>
+        <div class="people" id="people"></div>
+      </aside>
+
+      <section class="panel">
+        <div class="panelhead"><span>Antarctic operations</span><small>Station and field movement</small></div>
+        <div class="mapwrap map" id="map"></div>
+      </section>
+
+      <aside class="panel right">
+        <div class="panelhead"><span>Selected personnel</span><small id="detailStatus">In Transit</small></div>
+        <div class="detail" id="detail"></div>
+      </aside>
+    </div>
+  </section>
+
+  <section id="teams" class="tabcontent hidden"><div class="content"><div class="teamgrid" id="teamsGrid"></div></div></section>
+  <section id="accountability" class="tabcontent hidden"><div class="content"><div class="accountgrid" id="accountGrid"></div></div></section>
+  <section id="planning" class="tabcontent hidden"><div class="content"><div class="panel" style="padding:16px"><div class="formgrid">
+    <div class="fieldbox"><label>Personnel / team</label><select id="planPerson"></select></div>
+    <div class="fieldbox"><label>Origin</label><select id="planOrigin"><option>Maitri Station</option><option>Bharati Station</option></select></div>
+    <div class="fieldbox"><label>Destination</label><select id="planDestination"><option>Field Zone A</option><option>Field Zone B</option><option>Survey Point</option><option>Maitri Station</option><option>Bharati Station</option></select></div>
+    <div class="fieldbox"><label>Transport</label><select id="planTransport"><option>Tracked vehicle</option><option>Field vehicle</option><option>Aircraft</option><option>On foot</option></select></div>
+    <div class="fieldbox"><label>Departure</label><input id="planDeparture" type="datetime-local"></div>
+    <div class="fieldbox"><label>Expected return</label><input id="planReturn" type="datetime-local"></div>
+    <div class="fieldbox full"><label>Mission</label><input id="planMission" placeholder="Field mission"></div>
+    
+  </div><div style="margin-top:14px;display:flex;justify-content:flex-end"><button class="primary" id="createPlan">Create movement</button></div></div></div></section>
+  <section id="history" class="tabcontent hidden"><div class="content"><table class="table"><thead><tr><th>Date</th><th>Personnel</th><th>Origin</th><th>Destination</th><th>Transport</th><th>Status</th></tr></thead><tbody id="historyBody"></tbody></table></div></section>
+</main>
+
+<div class="modalback hidden" id="modal">
+  <div class="modal">
+    <div class="modalhead"><span>New movement</span><button class="close" id="closeModal">×</button></div>
+    <div class="modalbody"><div class="formgrid">
+      <div class="fieldbox"><label>Personnel / team</label><select id="mPerson"></select></div>
+      <div class="fieldbox"><label>Origin</label><select id="mOrigin"><option>Maitri Station</option><option>Bharati Station</option></select></div>
+      <div class="fieldbox"><label>Destination</label><select id="mDestination"><option>Field Zone A</option><option>Field Zone B</option><option>Survey Point</option></select></div>
+      <div class="fieldbox"><label>Transport</label><select id="mTransport"><option>Tracked vehicle</option><option>Field vehicle</option><option>Aircraft</option><option>On foot</option></select></div>
+      <div class="fieldbox"><label>Departure</label><input id="mDeparture" type="datetime-local"></div>
+      <div class="fieldbox"><label>Expected return</label><input id="mReturn" type="datetime-local"></div>
+      <div class="fieldbox full"><label>Mission</label><input id="mMission" placeholder="Field mission"></div>
+    </div></div>
+    <div class="modalfoot"><button class="secondary" id="cancelModal">Cancel</button><button class="primary" id="saveMovement">Create movement</button></div>
+  </div>
+</div>
+
+<script>
+const people = [
+ {id:"PER-001",name:"Arjun Menon",role:"Field Scientist",station:"Maitri",status:"In Transit",comm:"Connected",battery:84,hr:72,spo2:98,temp:36.6,steps:7420,health:"Normal",team:"Survey Team Alpha",mission:"Ice Shelf Survey",last:"21:44 IST",origin:"Maitri Station",dest:"Field Zone A",eta:"23:10",transport:"Tracked vehicle"},
+ {id:"PER-002",name:"Meera Nair",role:"Geologist",station:"Maitri",status:"Field Mission",comm:"Connected",battery:72,hr:78,spo2:97,temp:36.4,steps:6810,health:"Normal",team:"Survey Team Alpha",mission:"Ice Shelf Survey",last:"21:42 IST",origin:"Maitri Station",dest:"Survey Point",eta:"23:20",transport:"Field vehicle"},
+ {id:"PER-003",name:"Rahul Das",role:"Logistics Officer",station:"Bharati",status:"At Station",comm:"Connected",battery:96,hr:68,spo2:99,temp:36.7,steps:5140,health:"Normal",team:"Logistics Team",mission:"Station Logistics",last:"21:49 IST",origin:"Bharati Station",dest:"Bharati Station",eta:"—",transport:"—"},
+ {id:"PER-004",name:"Priya Shah",role:"Communications",station:"Maitri",status:"At Station",comm:"Connected",battery:91,hr:74,spo2:98,temp:36.5,steps:6030,health:"Normal",team:"Communications Team",mission:"Station Communications",last:"21:50 IST",origin:"Maitri Station",dest:"Maitri Station",eta:"—",transport:"—"},
+ {id:"PER-005",name:"Vikram Rao",role:"Engineer",station:"Bharati",status:"Attention",comm:"Weak",battery:38,hr:92,spo2:94,temp:37.1,steps:8840,health:"Monitor",team:"Infrastructure Team",mission:"Equipment Inspection",last:"21:16 IST",origin:"Bharati Station",dest:"Field Zone B",eta:"22:30",transport:"Tracked vehicle"},
+ {id:"PER-006",name:"Ananya Iyer",role:"Medical Officer",station:"Maitri",status:"At Station",comm:"Connected",battery:88,hr:71,spo2:99,temp:36.5,steps:4220,health:"Normal",team:"Medical Team",mission:"Station Medical Support",last:"21:48 IST",origin:"Maitri Station",dest:"Maitri Station",eta:"—",transport:"—"},
+ {id:"PER-007",name:"Karan Verma",role:"Field Engineer",station:"Bharati",status:"In Transit",comm:"Connected",battery:67,hr:83,spo2:96,temp:36.8,steps:7930,health:"Normal",team:"Infrastructure Team",mission:"Power Equipment Check",last:"21:39 IST",origin:"Bharati Station",dest:"Field Zone B",eta:"22:55",transport:"Field vehicle"},
+ {id:"PER-008",name:"Neha Krishnan",role:"Research Scientist",station:"Maitri",status:"At Station",comm:"Connected",battery:93,hr:69,spo2:98,temp:36.4,steps:3890,health:"Normal",team:"Research Team",mission:"Atmospheric Research",last:"21:47 IST",origin:"Maitri Station",dest:"Maitri Station",eta:"—",transport:"—"},
+ {id:"PER-009",name:"Aditya Rao",role:"Survey Specialist",station:"Bharati",status:"Field Mission",comm:"Connected",battery:76,hr:80,spo2:97,temp:36.7,steps:8120,health:"Normal",team:"Survey Team Beta",mission:"Terrain Survey",last:"21:40 IST",origin:"Bharati Station",dest:"Field Zone B",eta:"23:00",transport:"Tracked vehicle"},
+ {id:"PER-010",name:"Riya Menon",role:"Logistics Coordinator",station:"Maitri",status:"At Station",comm:"Connected",battery:86,hr:73,spo2:99,temp:36.5,steps:4670,health:"Normal",team:"Logistics Team",mission:"Cargo Coordination",last:"21:45 IST",origin:"Maitri Station",dest:"Maitri Station",eta:"—",transport:"—"}
+];
+
+const history = [
+ ["17 Sep 2026","Meera Nair","Maitri Station","Survey Point","Field vehicle","Completed"],
+ ["16 Sep 2026","Rahul Das","Bharati Station","Bharati Station","—","Completed"],
+ ["15 Sep 2026","Vikram Rao","Bharati Station","Field Zone B","Tracked vehicle","Attention"],
+ ["14 Sep 2026","Arjun Menon","Maitri Station","Field Zone A","Tracked vehicle","Completed"],
+ ["12 Sep 2026","Aditya Rao","Bharati Station","Field Zone B","Tracked vehicle","Completed"]
+];
+
+let selected = "PER-001";
+let showAllPersonnel = false;
+const mapPrefs={stations:true,stationLabels:true,fieldZones:true,activeRoute:true,plannedRoute:false,riskZones:false,personnelMode:'selected',baseMap:'satellite'};
+
+function initials(n){return n.split(" ").map(x=>x[0]).join("").slice(0,2)}
+function cls(s){return s==="At Station"?"safe":s==="In Transit"?"transit":s==="Field Mission"?"field":s==="Attention"?"attention":"offline"}
+function renderStats(){
+ const total=people.length, at=people.filter(p=>p.status==="At Station").length, tr=people.filter(p=>p.status==="In Transit").length, fm=people.filter(p=>p.status==="Field Mission").length, att=people.filter(p=>p.status==="Attention"||p.comm!=="Connected").length;
+ document.getElementById("stats").innerHTML=[
+  [total,"Personnel"],[at,"At station"],[tr,"In transit"],[fm,"Field mission"],[att,"Attention"]
+ ].map(x=>`<div class="stat"><div class="n">${x[0]}</div><div class="l">${x[1]}</div></div>`).join("");
+}
+function renderPeople(){
+ const q=document.getElementById("search").value.toLowerCase(), st=document.getElementById("stationFilter").value, ss=document.getElementById("statusFilter").value;
+ const arr=people.filter(p=>(!q||(`${p.name} ${p.role} ${p.id}`.toLowerCase().includes(q)))&&(!st||p.station===st)&&(!ss||p.status===ss));
+ document.getElementById("count").textContent=arr.length;
+ document.getElementById("people").innerHTML=arr.map(p=>`
+ <div class="person ${p.id===selected?"active":""}" data-id="${p.id}">
+  <div class="avatar">${initials(p.name)}</div><div>
+   <div class="pname">${p.name}</div><div class="pid">${p.id} · ${p.role}</div>
+   <div class="prow"><span>${p.station}</span><span class="badge ${cls(p.status)}">${p.status}</span><span>${p.battery}%</span></div>
+  </div>
+ </div>`).join("") || `<div style="padding:25px;color:#71808c;text-align:center">No matching personnel</div>`;
+ document.querySelectorAll(".person").forEach(el=>el.onclick=()=>{selected=el.dataset.id;renderAll()});
+}
+
+const weatherFeed={
+  Maitri:{temp:-18,wind:31,visibility:7.2,condition:'Cold · moderate wind',severity:'Caution'},
+  Bharati:{temp:-22,wind:46,visibility:3.8,condition:'Strong wind · reduced visibility',severity:'High'}
+};
+function weatherFor(p){return weatherFeed[p.station]||weatherFeed.Maitri}
+function routeRisk(p){
+  if(p.status==='At Station') return {score:8,label:'Low',cls:'risk-low'};
+  const w=weatherFor(p); let score=16;
+  score += w.wind>=45?24:w.wind>=30?12:5;
+  score += w.visibility<4?20:w.visibility<7?10:4;
+  score += p.comm!=='Connected'?16:0;
+  score += p.battery<50?14:p.battery<70?6:0;
+  score += p.status==='Attention'?16:0;
+  score += getProgress(p)>.75?7:0;
+  score=Math.min(96,score);
+  return {score,label:score>=70?'High':score>=40?'Moderate':'Low',cls:score>=70?'risk-high':score>=40?'risk-med':'risk-low'};
+}
+function geofenceInfo(p){
+  if(p.status==='At Station') return {ok:true,text:'Inside station geofence'};
+  if(p.id==='PER-005') return {ok:false,text:'0.8 km outside assigned operational corridor'};
+  if(p.id==='PER-009' && getProgress(p)>.55) return {ok:false,text:'0.4 km outside survey corridor'};
+  return {ok:true,text:'Inside assigned operational corridor'};
+}
+function communicationPrediction(p){
+  if(p.status==='At Station') return 'Coverage stable';
+  if(p.comm!=='Connected') return 'Signal currently weak — response risk elevated';
+  if(p.station==='Bharati' && getProgress(p)>.35) return 'Weak-signal zone predicted in ~12 min';
+  if(p.station==='Maitri' && getProgress(p)>.55) return 'Weak-signal zone predicted in ~18 min';
+  return 'Coverage expected to remain stable';
+}
+function recalcEta(p){
+  if(p.eta==='—') return '—';
+  const parts=p.eta.split(':').map(Number); if(parts.length<2 || parts.some(Number.isNaN)) return p.eta;
+  const r=routeRisk(p); let add=r.score>=70?25:r.score>=40?12:0; if(p.comm!=='Connected') add+=8;
+  let mins=parts[0]*60+parts[1]+add; mins=((mins%1440)+1440)%1440; return String(Math.floor(mins/60)).padStart(2,'0')+':'+String(mins%60).padStart(2,'0');
+}
+function overdueInfo(p){
+  if(p.status==='At Station') return {overdue:false,minutes:0};
+  const r=routeRisk(p); const delay=(r.score>=70?18:r.score>=40?8:0)+(p.comm!=='Connected'?7:0)+(p.status==='Attention'?12:0);
+  return {overdue:delay>=15,minutes:delay};
+}
+function timelineFor(p){
+  const pct=Math.round(getProgress(p)*100);
+  return [
+    ['Departure',`${p.origin} · ${movementStarted[p.id]||'20:30 IST'}`,''],
+    ['Checkpoint 1',`Route checkpoint · ${Math.max(18,Math.round(pct*.55))}% complete`,''],
+    ['Current position',`${movementState(p)} · ${p.last}`,'current'],
+    ['Next milestone',`${p.dest} · ETA ${recalcEta(p)}`,'plan']
+  ];
+}
+function openResponse(p){
+  const back=document.getElementById('responseModal'); if(!back)return;
+  const g=geofenceInfo(p), r=routeRisk(p), o=overdueInfo(p), w=weatherFor(p);
+  document.getElementById('responseBody').innerHTML=`<div class="personhero"><div class="heroavatar">${initials(p.name)}</div><div><div class="hero-name">${p.name}</div><div class="hero-meta">${p.id} · ${p.role}</div></div></div><div class="intel-grid"><div class="intel-card"><span>Last known</span><strong>${p.dest} · ${progressLabel(p)}</strong></div><div class="intel-card"><span>Nearest station</span><strong>${p.station} · ${p.status==='At Station'?'0 km':'operational base'}</strong></div><div class="intel-card"><span>Communication</span><strong>${p.comm}</strong></div><div class="intel-card"><span>Risk</span><strong class="${r.cls}">${r.label} · ${r.score}/100</strong></div></div><div class="response-box"><div class="response-title">Emergency response view</div><p>${o.overdue?'Movement is overdue by '+o.minutes+' min. ':''}${g.ok?'Personnel remains inside the assigned corridor.':'Geofence breach detected: '+g.text+'. '}${w.condition} at ${p.station}.</p><div class="response-actions"><button onclick="alert('Location shared for ${esc(p.id)}')">Share location</button><button onclick="alert('Response team alerted for ${esc(p.id)}')" class="primary-response">Alert team</button></div></div>`;
+  back.classList.remove('hidden');
+}
+function renderDetail(){
+ const p=people.find(x=>x.id===selected)||people[0];
+ const risk=routeRisk(p), weather=weatherFor(p), geo=geofenceInfo(p), overdue=overdueInfo(p), eta=recalcEta(p), commPred=communicationPrediction(p), tl=timelineFor(p);
+ document.getElementById("detailStatus").textContent=p.status;
+ document.getElementById("detail").innerHTML=`
+ <div class="personhero"><div class="heroavatar">${initials(p.name)}</div><div><div class="hero-name">${p.name}</div><div class="hero-meta">${p.id} · ${p.role}</div></div></div>
+ <div class="section"><div class="sectiontitle">Status</div><div class="grid2"><div class="kv"><span>Personnel status</span><strong><span class="badge ${cls(p.status)}">${p.status}</span></strong></div><div class="kv"><span>Communication</span><strong>${p.comm}</strong></div><div class="kv"><span>Station</span><strong>${p.station}</strong></div><div class="kv"><span>Team</span><strong>${p.team}</strong></div></div></div>
+ <div class="section"><div class="sectiontitle">Tracker</div><div class="kv"><span>Battery</span><strong>${p.battery}%</strong><div class="progress"><i style="width:${p.battery}%"></i></div></div><div style="height:9px"></div><div class="grid2"><div class="kv"><span>Last update</span><strong>${p.last}</strong></div><div class="kv"><span>Transport</span><strong>${p.transport}</strong></div></div><div style="height:9px"></div><div class="kv"><span>Last known position</span><strong>${p.status==="At Station"?p.station+" Station":p.dest+" corridor · "+progressLabel(p)+" route"}</strong><div class="routebar"><i style="width:${getProgress(p)*100}%"></i></div></div></div>
+ <div class="section"><div class="sectiontitle">Movement intelligence</div><div class="intel-grid"><div class="intel-card"><span>Route risk</span><strong class="${risk.cls}">${risk.label} · ${risk.score}/100</strong><div class="riskbar ${risk.label==='High'?'high':risk.label==='Low'?'low':''}"><i style="width:${risk.score}%"></i></div></div><div class="intel-card"><span>Recalculated ETA</span><strong>${eta}</strong></div><div class="intel-card"><span>Geofence</span><strong class="${geo.ok?'geofence-ok':'geofence-alert'}">${geo.ok?'✓ Inside':'⚠ Breach'}</strong></div><div class="intel-card"><span>Comm forecast</span><strong>${p.comm==='Connected'?'Stable':'Weak'}</strong></div></div><div class="weather-banner"><strong>Weather-aware movement · simulated operational feed</strong><div class="weather-line"><span>${weather.condition}</span><span>${weather.temp}°C · ${weather.wind} km/h</span></div><div class="weather-line"><span>Visibility ${weather.visibility} km</span><span>${weather.severity} conditions</span></div></div><div class="compact-alert ${geo.ok?'warn':'red'}">${geo.ok?commPred:(geo.text+'. '+commPred)}</div>${overdue.overdue?`<div class="response-box"><div class="response-title">⚠ OVERDUE PERSONNEL</div><p>${p.name} has an estimated ${overdue.minutes} min operational delay. Last known location: ${p.dest} corridor.</p><div class="response-actions"><button onclick="openResponse(people.find(x=>x.id==='${p.id}'))">Open response view</button><button class="primary-response" onclick="alert('Response team alerted for ${esc(p.id)}')">Alert team</button></div></div>`:''}</div>
+ <div class="section"><div class="sectiontitle">Wearable health</div><div class="healthgrid"><div class="healthcard"><span>Heart rate</span><strong>${p.hr} bpm</strong></div><div class="healthcard"><span>SpO₂</span><strong>${p.spo2}%</strong></div><div class="healthcard"><span>Body temperature</span><strong>${p.temp} °C</strong></div><div class="healthcard"><span>Activity</span><strong>${p.steps.toLocaleString()} steps</strong></div></div><div style="height:8px"></div><div class="kv"><span>Wearable state</span><strong class="${p.health==="Normal"?"healthnormal":"healthmonitor"}">${p.health}</strong></div></div>
+ <div class="section"><div class="sectiontitle">Movement assignment</div><div class="kv"><span>Mission</span><strong>${p.mission}</strong></div><div class="movement-strip"><div class="movement-mini"><span>Origin</span><strong>${p.origin.replace(' Station','')}</strong></div><div class="movement-mini"><span>Destination</span><strong>${p.dest}</strong></div><div class="movement-mini"><span>Progress</span><strong>${progressLabel(p)}</strong></div><div class="movement-mini"><span>ETA / Return</span><strong>${eta}</strong></div></div><div style="height:8px"></div><div class="grid2"><div class="kv"><span>Movement state</span><strong>${movementState(p)}</strong></div><div class="kv"><span>Risk reason</span><strong>${risk.label==='High'?'Weather / comm / delay':'Normal operational conditions'}</strong></div></div></div>
+ <div class="section"><div class="sectiontitle">Expedition digital trail</div><div class="timeline">${tl.map(x=>`<div class="event ${x[2]}"><strong>${x[0]}</strong><span>${x[1]}</span></div>`).join('')}</div></div>
+ <div class="section"><button class="action" onclick="focusPerson('${p.id}')">Follow live movement</button></div>`;
+}
+let leafletMap=null;
+let followLive=false;
+let leafletLayers={};
+const stationCoords={
+  Maitri:[-70.76683,11.73078],
+  Bharati:[-69.40680,76.19525]
+};
+const fieldCoords={
+  "Field Zone A":[-70.64,12.08],
+  "Survey Point":[-70.61,12.28],
+  "Field Zone B":[-69.30,76.55]
+};
+
+const movementProgress={"PER-001":.58,"PER-002":.43,"PER-005":.68,"PER-007":.52,"PER-009":.46};
+const movementStarted={"PER-001":"20:30 IST","PER-002":"20:20 IST","PER-005":"19:55 IST","PER-007":"20:05 IST","PER-009":"20:10 IST"};
+function getProgress(p){
+  if(p.status==='At Station') return 1;
+  return Math.max(0.02,Math.min(0.98,movementProgress[p.id] ?? .5));
+}
+function personCoord(p){
+  const s=stationCoords[p.station];
+  if(p.status==='At Station') return s;
+  const d=fieldCoords[p.dest] || (p.station==='Maitri'?fieldCoords['Field Zone A']:fieldCoords['Field Zone B']);
+  const progress=getProgress(p);
+  const idx=parseInt(p.id.slice(-1),10)||1;
+  const lateral=((idx%3)-1)*0.055;
+  return [s[0]+(d[0]-s[0])*progress+lateral, s[1]+(d[1]-s[1])*progress+lateral];
+}
+function progressLabel(p){return p.status==='At Station'?'100%':Math.round(getProgress(p)*100)+'%'}
+function movementState(p){
+  if(p.status==='Attention') return 'Attention / delayed';
+  if(p.status==='Offline') return 'Signal lost';
+  if(p.status==='Field Mission') return 'On field mission';
+  if(p.status==='In Transit') return 'In transit';
+  return 'At station';
+}
+function esc(s){return String(s).replace(/[&<>'"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[m]))}
+function markerClass(p){return p.status==='At Station'?'green':p.status==='Field Mission'?'amber':p.status==='Attention'?'red':p.status==='Offline'?'gray':'blue'}
+function popupForPerson(p){return `<div class="pop-title">${esc(p.name)}</div><div class="pop-meta">${esc(p.id)} · ${esc(p.role)}</div><div class="pop-row"><span>Status</span><b>${esc(p.status)}</b></div><div class="pop-row"><span>Station</span><b>${esc(p.station)}</b></div><div class="pop-row"><span>Mission</span><b>${esc(p.mission)}</b></div><div class="pop-row"><span>Battery</span><b>${p.battery}%</b></div><div class="pop-row"><span>Last update</span><b>${esc(p.last)}</b></div>`}
+function stationPopup(name){const c=stationCoords[name];return `<div class="pop-title">${name} Research Station</div><div class="pop-meta">Indian Antarctic Programme</div><div class="pop-row"><span>Coordinates</span><b>${Math.abs(c[0]).toFixed(4)}°S ${c[1].toFixed(4)}°E</b></div><div class="pop-row"><span>Tracked personnel</span><b>${people.filter(p=>p.station===name).length}</b></div>`}
+function routeForLeaflet(p){if(p.status==='At Station')return null;return [stationCoords[p.station],personCoord(p),fieldCoords[p.dest]||personCoord(p)]}
+function plannedForLeaflet(p){if(p.status==='At Station')return null;return [stationCoords[p.station],fieldCoords[p.dest]||personCoord(p)]}
+
+function renderMap(){
+ const mapEl=document.getElementById('map');
+ if(!mapEl)return;
+ const p=people.find(x=>x.id===selected)||people[0];
+ mapEl.innerHTML=`<div class="maphead"><div class="maplabel"><strong>ANTARCTIC OPERATIONS · PERSONNEL TRACKING</strong><span>Focused live movement · ${esc(p.name)} · ${esc(p.id)}</span></div></div><div class="map-options"><button id="mapOptionsBtn">MAP OPTIONS ▾</button><div class="map-menu" id="mapMenu"><div class="menu-title">VIEW</div><div class="menu-group"><div class="menu-seg"><button id="focusOnly" class="${mapPrefs.personnelMode==='selected'?'active':''}">Selected only</button><button id="showAll" class="${mapPrefs.personnelMode==='all'?'active':''}">Show all</button></div></div><div class="menu-title">BASE MAP</div><div class="menu-group base-map-group"><label class="base-map-option"><input type="radio" name="baseMapChoice" value="satellite" ${mapPrefs.baseMap==='satellite'?'checked':''}> <span>Satellite Terrain</span></label><label class="base-map-option"><input type="radio" name="baseMapChoice" value="standard" ${mapPrefs.baseMap==='standard'?'checked':''}> <span>Standard Map</span></label><label class="base-map-option"><input type="radio" name="baseMapChoice" value="topographic" ${mapPrefs.baseMap==='topographic'?'checked':''}> <span>Topographic Terrain</span></label></div></div></div><div class="maptime-fixed"><span class="dot"></span><span class="time-label">LOCAL TIME</span><span id="mapclock">--:-- IST</span></div><div id="opsLeaflet"></div><div class="maptools"><button id="fitStations">STATION OVERVIEW</button><button id="followSelected">FOLLOW ${esc(p.id)}</button><button id="resetView">RESET</button></div><div class="leg"><span class="legend-line active"></span> Active movement</div></div><div class="mapstatus"><strong>${esc(p.name)} · ${esc(p.id)}</strong><span>${esc(movementState(p))} · ${esc(p.dest)}</span><div class="mapmetric"><span>Route <b>${progressLabel(p)}</b></span><span>Battery <b>${p.battery}%</b></span><span>ETA <b>${esc(p.eta)}</b></span><span>TIME <b id="mapclockStatus">--:-- IST</b></span></div><span>${esc(p.transport)} · Last update ${esc(p.last)}</span></div><div id="mapLoading" class="map-loading">Loading live map…</div>`;
+ if(typeof L==='undefined'){
+   document.getElementById('mapLoading').textContent='Map library could not load. Check internet connection.';
+   return;
+ }
+ leafletMap=L.map('opsLeaflet',{zoomControl:true,attributionControl:true,scrollWheelZoom:true,minZoom:2,maxZoom:14,worldCopyJump:false});
+ const street=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',{maxZoom:18,attribution:'Tiles © Esri'});
+ const osm=L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap contributors'});
+ const topo=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',{maxZoom:18,attribution:'Tiles © Esri'});
+ const imagery=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:18,attribution:'Tiles © Esri'});
+ leafletLayers={markers:[],routes:[],stations:[],destinations:[]};
+
+ // Keep station markers visible, but never force the map to zoom out to both stations.
+ if(mapPrefs.stations) Object.entries(stationCoords).forEach(([name,c])=>{
+   const icon=L.divIcon({className:'',html:`<div class="station-pin"></div>`,iconSize:[28,38],iconAnchor:[14,35]});
+   const m=L.marker(c,{icon,zIndexOffset:500}).addTo(leafletMap).bindPopup(stationPopup(name));
+   if(mapPrefs.stationLabels) m.bindTooltip(`<div class="station-label-map">${name}<span>Indian research station</span></div>`,{permanent:true,direction:'right',offset:[12,-14],className:'',opacity:.98});
+   leafletLayers.stations.push(m);
+ });
+
+ // Optional field/risk overlays keep the map informative without forcing every label on screen.
+ if(mapPrefs.fieldZones){ Object.entries(fieldCoords).forEach(([name,c])=>{ const circle=L.circle(c,{radius:6500,color:'#b87818',weight:1,dashArray:'5 5',fillColor:'#b87818',fillOpacity:.04}).addTo(leafletMap); circle.bindTooltip(name,{permanent:false,direction:'top'}); leafletLayers.destinations.push(circle); }); }
+ if(mapPrefs.riskZones){ const w=weatherFor(p); const riskCenter=fieldCoords[p.dest]||fieldCoords['Field Zone A']; L.circle(riskCenter,{radius:w.severity==='High'?18000:10000,color:'#c44747',weight:1,fillColor:'#c44747',fillOpacity:.08}).addTo(leafletMap); }
+ // Selected person's route is always the visual priority.
+ if(p.status!=='At Station'){
+   const planned=plannedForLeaflet(p), active=routeForLeaflet(p);
+   if(planned && mapPrefs.plannedRoute) leafletLayers.routes.push(L.polyline(planned,{color:'#7b8790',weight:3,dashArray:'8 8',opacity:.65}).addTo(leafletMap));
+   if(active && mapPrefs.activeRoute){
+     // Active movement: high-contrast blue route, always visible for the selected person.
+     leafletLayers.routes.push(L.polyline(active,{color:'#ffffff',weight:11,opacity:.98,lineCap:'round',lineJoin:'round'}).addTo(leafletMap));
+     leafletLayers.routes.push(L.polyline(active,{color:'#1769aa',weight:7,opacity:1,lineCap:'round',lineJoin:'round'}).addTo(leafletMap));
+     const d=fieldCoords[p.dest]||active[2];
+     const dm=L.marker(d,{icon:L.divIcon({className:'',html:`<div style="width:16px;height:16px;border:2px solid #1769aa;background:#fff;transform:rotate(45deg);box-shadow:0 2px 5px rgba(0,0,0,.18)"></div>`,iconSize:[16,16],iconAnchor:[8,8]})}).addTo(leafletMap).bindTooltip(esc(p.dest),{permanent:true,direction:'top',offset:[0,-7],className:'route-label'});
+     leafletLayers.destinations.push(dm);
+   }
+ }
+
+ // In focused mode, other people are deliberately hidden to eliminate marker congestion.
+ // SHOW ALL brings them back as small, low-emphasis markers.
+ people.forEach(person=>{
+   if(mapPrefs.personnelMode==='selected' && person.id!==selected) return;
+   const c=personCoord(person), mcls=markerClass(person), isSelected=person.id===selected;
+   const selectedClass=isSelected?' selected-person-pin':'';
+   const muted=!isSelected && showAllPersonnel?' person-dot-muted':'';
+   const html=isSelected
+     ? `<div class="map-pin ${mcls}${selectedClass} selected-live-ring"></div>`
+     : `<div class="map-pin ${mcls}${muted}"></div>`;
+   const icon=L.divIcon({className:'',html,iconSize:[24,34],iconAnchor:[12,32]});
+   const m=L.marker(c,{icon,zIndexOffset:isSelected?1500:100}).addTo(leafletMap).bindPopup(popupForPerson(person));
+   m.__personId=person.id;
+   m.on('click',()=>{selected=person.id;showAllPersonnel=false;renderAll();setTimeout(()=>focusSelectedOnMap(),100)});
+   if(isSelected)m.bindTooltip(`<div class="station-label-map">${esc(person.name)}<span>${esc(person.status)} · ${Math.round(getProgress(person)*100)}% route</span></div>`,{permanent:true,direction:'right',offset:[12,-18],className:''}).openTooltip();
+   leafletLayers.markers.push(m);
+ });
+
+ function drawSelectedActiveRoute(){
+   if(!leafletMap || !p || p.status==='At Station' || !mapPrefs.activeRoute) return;
+   const active=routeForLeaflet(p);
+   if(!active) return;
+   // Remove only existing route layers, then redraw the selected person's route on top.
+   leafletLayers.routes.forEach(l=>{try{leafletMap.removeLayer(l)}catch(e){}});
+   leafletLayers.routes=[];
+   leafletLayers.routes.push(L.polyline(active,{color:'#ffffff',weight:11,opacity:.98,lineCap:'round',lineJoin:'round',interactive:false}).addTo(leafletMap));
+   leafletLayers.routes.push(L.polyline(active,{color:'#1769aa',weight:7,opacity:1,lineCap:'round',lineJoin:'round',interactive:false}).addTo(leafletMap));
+   const d=fieldCoords[p.dest]||active[2];
+   if(d){
+     const dm=L.marker(d,{icon:L.divIcon({className:'',html:`<div style="width:16px;height:16px;border:2px solid #1769aa;background:#fff;transform:rotate(45deg);box-shadow:0 2px 5px rgba(0,0,0,.18)"></div>`,iconSize:[16,16],iconAnchor:[8,8]})}).addTo(leafletMap).bindTooltip(esc(p.dest),{permanent:true,direction:'top',offset:[0,-7],className:'route-label'});
+     leafletLayers.destinations.push(dm);
+   }
+ }
+ function fitSelected(){
+   const route=p.status==='At Station'?[stationCoords[p.station]]:[stationCoords[p.station],personCoord(p),fieldCoords[p.dest]||personCoord(p)];
+   const b=L.latLngBounds(route);
+   leafletMap.fitBounds(b,{paddingTopLeft:[90,80],paddingBottomRight:[90,100],maxZoom:p.status==='At Station'?7:9,animate:true});
+ }
+ function focusSelectedOnMap(){
+   if(p.status==='At Station') leafletMap.setView(stationCoords[p.station],7,{animate:true});
+   else fitSelected();
+ }
+ document.getElementById('fitStations').onclick=()=>leafletMap.fitBounds(L.latLngBounds([stationCoords.Maitri,stationCoords.Bharati]),{padding:[80,80],maxZoom:5,animate:true});
+ document.getElementById('resetView').onclick=()=>{followLive=false;mapPrefs.personnelMode='selected';showAllPersonnel=false;renderMap();setTimeout(focusSelectedOnMap,80)};
+ document.getElementById('followSelected').onclick=()=>{followLive=true; drawSelectedActiveRoute(); focusSelectedOnMap(); setTimeout(()=>{leafletMap.invalidateSize(); drawSelectedActiveRoute(); focusSelectedOnMap();},120)};
+ const menu=document.getElementById('mapMenu');
+ document.getElementById('mapOptionsBtn').onclick=(e)=>{e.stopPropagation();menu.classList.toggle('open')};
+ menu.addEventListener('click',e=>e.stopPropagation());
+ document.getElementById('focusOnly').onclick=()=>{mapPrefs.personnelMode='selected';showAllPersonnel=false;renderMap();setTimeout(focusSelectedOnMap,80)};
+ document.getElementById('showAll').onclick=()=>{mapPrefs.personnelMode='all';showAllPersonnel=true;renderMap();setTimeout(focusSelectedOnMap,80)};
+  // Base maps live inside MAP OPTIONS. Switching them changes only the tile layer;
+ // it never rebuilds the map, so the selected terrain stays active.
+ const baseMaps={satellite:imagery,standard:street,topographic:topo};
+ const activeBase=baseMaps[mapPrefs.baseMap]||imagery;
+ activeBase.addTo(leafletMap);
+ document.querySelectorAll('input[name=baseMapChoice]').forEach(r=>r.addEventListener('change',e=>{
+   const next=baseMaps[e.target.value];
+   Object.values(baseMaps).forEach(layer=>{if(leafletMap.hasLayer(layer)) leafletMap.removeLayer(layer);});
+   next.addTo(leafletMap);
+   mapPrefs.baseMap=e.target.value;
+ }));
+ document.getElementById('mapLoading').classList.add('hidden');
+ updateClock();
+ setTimeout(()=>{leafletMap.invalidateSize(true); drawSelectedActiveRoute(); focusSelectedOnMap();},60);
+ setTimeout(()=>{leafletMap.invalidateSize(true);},250);
+ setTimeout(()=>{leafletMap.invalidateSize(true);},700);
+}
+function renderTeams(){
+ const teams=[...new Set(people.map(p=>p.team))];
+ document.getElementById("teamsGrid").innerHTML=teams.map(t=>{let m=people.filter(p=>p.team===t), safe=m.filter(p=>p.status!=="Attention"&&p.status!=="Offline").length;return `<div class="teamcard"><div class="teamtop"><div class="teamname">${t}</div><span class="badge ${safe===m.length?'safe':'attention'}">${safe}/${m.length} accounted</span></div><div class="teammeta">${m[0].mission} · ${m[0].station}</div>${m.map(p=>`<div class="memberrow"><span>${p.name}</span><span>${p.status}</span></div>`).join("")}</div>`}).join("");
+}
+function renderAccountability(){
+ const accounted=people.filter(p=>p.status!=="Attention"&&p.status!=="Offline").length, attention=people.filter(p=>p.status==="Attention"||p.comm!=="Connected").length;
+ document.getElementById("accountGrid").innerHTML=`<div class="account"><h3>Personnel accountability</h3><div class="bigcheck">${accounted}/${people.length}</div><p>Personnel currently accounted for</p></div><div class="account"><h3>Attention required</h3><div class="bigcheck">${attention}</div><p>Communication or operational attention</p></div><div class="account"><h3>Field movements</h3><div class="bigcheck">${people.filter(p=>p.status==="Field Mission"||p.status==="In Transit"||p.status==="Attention").length}</div><p>Active movement assignments</p></div><div class="account"><h3>Stations</h3><div class="bigcheck">2</div><p>Maitri and Bharati</p></div>`;
+}
+function renderHistory(){document.getElementById("historyBody").innerHTML=history.map(r=>`<tr>${r.map((c,i)=>`<td>${i===5?`<span class="badge ${c==="Attention"?'attention':'safe'}">${c}</span>`:c}</td>`).join("")}</tr>`).join("")}
+function fillSelects(){["mPerson","planPerson"].forEach(id=>document.getElementById(id).innerHTML=people.map(p=>`<option value="${p.id}">${p.name} · ${p.id}</option>`).join(""))}
+function renderAll(){renderStats();renderPeople();renderDetail();renderMap();renderTeams();renderAccountability();renderHistory();fillSelects();updateClock()}
+function focusPerson(id){
+ selected=id;
+ document.querySelector('[data-tab="tracking"]').click();
+ renderAll();
+ setTimeout(()=>{
+   const mapEl=document.getElementById("map");
+   if(mapEl) mapEl.scrollIntoView({behavior:"smooth",block:"center"});
+ },80);
+}
+function updateClock(){let d=new Date();let s=d.toLocaleTimeString("en-IN",{hour:"2-digit",minute:"2-digit",hour12:false});document.getElementById("clock").textContent=s+" IST";let mc=document.getElementById("mapclock");if(mc)mc.textContent=s+" IST";let ms=document.getElementById("mapclockStatus");if(ms)ms.textContent=s+" IST"}
+document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));b.classList.add("active");document.querySelectorAll(".tabcontent").forEach(x=>x.classList.add("hidden"));document.getElementById(b.dataset.tab).classList.remove("hidden")});
+["search","stationFilter","statusFilter"].forEach(id=>document.getElementById(id).addEventListener("input",renderPeople));
+document.getElementById("closeModal").onclick=()=>document.getElementById("modal").classList.add("hidden");
+document.getElementById("cancelModal").onclick=()=>document.getElementById("modal").classList.add("hidden");
+function nowInputValue(){const d=new Date();const pad=n=>String(n).padStart(2,'0');return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`}
+function addMovementFrom(prefix){
+  const id=document.getElementById(prefix+'Person').value;
+  const p=people.find(x=>x.id===id); if(!p)return;
+  const origin=document.getElementById(prefix+'Origin').value;
+  const dest=document.getElementById(prefix+'Destination').value;
+  const transport=document.getElementById(prefix+'Transport').value;
+  const mission=document.getElementById(prefix+'Mission').value.trim() || 'Expedition movement';
+  const dep=document.getElementById(prefix+'Departure').value;
+  const ret=document.getElementById(prefix+'Return').value;
+  p.origin=origin; p.dest=dest; p.transport=transport; p.mission=mission; p.eta=ret?new Date(ret).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:false}):'—';
+  if(origin.includes('Maitri')) p.station='Maitri'; else if(origin.includes('Bharati')) p.station='Bharati';
+  p.status='In Transit'; p.comm='Connected'; p.last=new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:false})+' IST';
+  movementProgress[p.id]=.04; movementStarted[p.id]=p.last;
+  history.unshift([new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}),p.name,origin,dest,transport,'In Transit']);
+  selected=p.id; renderAll(); document.getElementById('modal').classList.add('hidden');
+  document.querySelector('[data-tab="tracking"]').click();
+}
+document.getElementById("saveMovement").onclick=()=>addMovementFrom('m');
+document.getElementById("createPlan").onclick=()=>{
+  addMovementFrom('plan');
+  document.querySelector('[data-tab="tracking"]').click();
+};
+function setDefaultMovementTimes(){
+  ['m','plan'].forEach(prefix=>{document.getElementById(prefix+'Departure').value=nowInputValue();const d=new Date(Date.now()+90*60000);const pad=n=>String(n).padStart(2,'0');document.getElementById(prefix+'Return').value=`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`});
+}
+document.getElementById("newMove").onclick=()=>{setDefaultMovementTimes();document.getElementById("modal").classList.remove("hidden")};
+// Simulated movement feed: advances active personnel without rebuilding the map.
+// This keeps the selected base map, zoom, menu state and user view exactly where the user left them.
+function refreshLiveMap(){
+  if(!leafletMap) return;
+  const p=people.find(x=>x.id===selected)||people[0];
+  leafletLayers.markers.forEach(m=>{
+    const person=people.find(x=>x.id===m.__personId);
+    if(person) m.setLatLng(personCoord(person));
+  });
+  // When FOLLOW is enabled, keep the camera attached to the selected person's
+  // current simulated GPS position. Do not rebuild the map or create a new marker.
+  if(followLive){
+    const current=personCoord(p);
+    leafletMap.panTo(current,{animate:true,duration:.45});
+  }
+  leafletLayers.routes.forEach(l=>{try{leafletMap.removeLayer(l)}catch(e){}});
+  leafletLayers.routes=[];
+  leafletLayers.destinations.forEach(l=>{try{leafletMap.removeLayer(l)}catch(e){}});
+  leafletLayers.destinations=[];
+  if(p.status!=='At Station' && mapPrefs.activeRoute){
+    const active=routeForLeaflet(p);
+    if(active){
+      leafletLayers.routes.push(L.polyline(active,{color:'#ffffff',weight:11,opacity:.98,lineCap:'round',lineJoin:'round',interactive:false}).addTo(leafletMap));
+      leafletLayers.routes.push(L.polyline(active,{color:'#1769aa',weight:7,opacity:1,lineCap:'round',lineJoin:'round',interactive:false}).addTo(leafletMap));
+      const d=fieldCoords[p.dest]||active[2];
+      const dm=L.marker(d,{icon:L.divIcon({className:'',html:`<div style="width:16px;height:16px;border:2px solid #1769aa;background:#fff;transform:rotate(45deg);box-shadow:0 2px 5px rgba(0,0,0,.18)"></div>`,iconSize:[16,16],iconAnchor:[8,8]})}).addTo(leafletMap).bindTooltip(esc(p.dest),{permanent:true,direction:'top',offset:[0,-7],className:'route-label'});
+      leafletLayers.destinations.push(dm);
+    }
+  }
+  const status=document.querySelector('.mapstatus');
+  if(status){
+    status.querySelector('strong').textContent=`${p.name} · ${p.id}`;
+    const spans=status.querySelectorAll(':scope > span');
+    if(spans[0]) spans[0].textContent=`${movementState(p)} · ${p.dest}`;
+    const metric=status.querySelector('.mapmetric');
+    if(metric){
+      const vals=metric.querySelectorAll('b');
+      if(vals[0]) vals[0].textContent=progressLabel(p);
+      if(vals[1]) vals[1].textContent=p.battery+'%';
+      if(vals[2]) vals[2].textContent=p.eta;
+    }
+    if(spans[1]) spans[1].textContent=`${p.transport} · Last update ${p.last}`;
+  }
+}
+setInterval(()=>{
+  let changed=false;
+  people.forEach(p=>{
+    if(p.status==='In Transit'||p.status==='Field Mission'){
+      const before=getProgress(p); movementProgress[p.id]=Math.min(.94,before+.003); p.last=new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:false})+' IST'; changed=true;
+    }
+  });
+  if(changed){renderStats();renderPeople();renderDetail();refreshLiveMap();}
+},1000);
+updateClock();renderAll();setInterval(updateClock,1000);
+</script>
+<div class="modalback hidden" id="responseModal"><div class="modal"><div class="modalhead"><span>Emergency response · Personnel movement</span><button class="close" onclick="document.getElementById('responseModal').classList.add('hidden')">×</button></div><div class="modalbody" id="responseBody"></div><div class="modalfoot"><button class="secondary" onclick="document.getElementById('responseModal').classList.add('hidden')">Close</button></div></div></div>
+</body>
+</html>
